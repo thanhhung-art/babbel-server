@@ -1,0 +1,68 @@
+import express, { Express, Request, Response } from 'express';
+import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { Server, Socket } from 'socket.io';
+import cors from 'cors';
+import { DefaultEventsMap } from 'socket.io/dist/typed-events';
+import mongoose from 'mongoose';
+import { errorHandler } from './utils/errorHandler';
+import { authRouter } from './routes/auth';
+import { userRouter } from './routes/user';
+import { conversationRouter } from './routes/conversation';
+import { socketHandler } from './routes/socket';
+import { roomRouter } from './routes/room';
+import cookieParser from 'cookie-parser';
+
+dotenv.config();
+
+if (process.env.MONGO_URL) {
+  mongoose
+    .connect(process.env.MONGO_URL)
+    .then(() => {
+      console.log('mongodb is ready');
+    })
+    .catch((err) => console.log(err));
+}
+
+const app: Express = express();
+app.use(cookieParser())
+app.use(express.json());
+app.use(cors({ origin: true, credentials: true }));
+
+const port = process.env.PORT;
+const httpServer = createServer(app);
+const io = new Server<
+  DefaultEventsMap,
+  DefaultEventsMap,
+  DefaultEventsMap,
+  User
+>(httpServer, {
+  cors: {
+    origin: 'http://localhost:3000',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  },
+  maxHttpBufferSize: 1e8
+});
+
+app.get('/', async (req: Request, res: Response) => {
+  res.status(200).json('hello');
+});
+app.use('/api/conversation', conversationRouter);
+app.use('/api/user', userRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/room', roomRouter)
+app.use(errorHandler);
+
+io.use((socket, next) => {
+  socket.data = socket.handshake.auth.user;
+  next();
+});
+
+io.on('connection', (socket: Socket) => {
+  socketHandler(io, socket)
+});
+
+httpServer.listen(port, () => {
+  console.log('server is running at port ' + port);
+});
