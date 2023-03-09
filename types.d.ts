@@ -1,9 +1,14 @@
 declare interface User {
-    _id: string
-    name: string
-    email: string
-    password: string
-    online: boolean
+    
+    name: string;
+    email: string;
+    password?: string;
+    ggId?: string;
+    avatar?: string;
+    friends: string[];
+    friendreq: string[];
+    roomJoined: string[];
+    loginWithGG?: boolean | undefined;
     notification: [{
         msg: string
         senderId: string

@@ -4,11 +4,13 @@ const UserSchema = new Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true },
-    password: { type: String, required: true },
+    password: { type: String },
     avatar: String,
     friends: [ String ],
     friendreq: [ String ],
     roomJoined: [ String ],
+    loginWithGG: Boolean,
+    ggId: String,
     notification: [
       {
         msg: String,
