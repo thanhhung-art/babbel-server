@@ -66,3 +66,5 @@ io.on('connection', (socket: Socket) => {
 httpServer.listen(port, () => {
   console.log('server is running at port ' + port);
 });
+
+module.exports = app
