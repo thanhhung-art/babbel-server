@@ -23,3 +23,5 @@ declare interface Message {
     time: string;
     image?: string;
 }
+
+declare type StaticOrigin = boolean | string | RegExp | (boolean | string | RegExp)[];

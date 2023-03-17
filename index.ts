@@ -24,10 +24,24 @@ if (process.env.MONGO_URL) {
     .catch((err) => console.log(err));
 }
 
+const whiteList = ['http://localhost:3000']
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, origin?: StaticOrigin | undefined) => void) => {
+    if (origin && whiteList.includes(origin)) {
+      callback(null, true)
+      return
+    }
+
+    callback(new Error("not allowed by CORS"))
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}
+
 const app: Express = express();
 app.use(cookieParser())
 app.use(express.json());
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors(corsOptions));
 
 const port = process.env.PORT;
 const httpServer = createServer(app);
@@ -37,11 +51,7 @@ const io = new Server<
   DefaultEventsMap,
   User
 >(httpServer, {
-  cors: {
-    origin: 'http://localhost:3000',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  },
+  cors: corsOptions,
   maxHttpBufferSize: 1e8
 });
 
@@ -50,7 +60,10 @@ app.get('/', async (req: Request, res: Response) => {
 });
 app.use('/api/conversation', conversationRouter);
 app.use('/api/user', userRouter);
+
+app.options('/api/auth', cors());
 app.use('/api/auth', authRouter);
+
 app.use('/api/room', roomRouter)
 app.use(errorHandler);
 
