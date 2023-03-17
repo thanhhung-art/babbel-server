@@ -114,10 +114,10 @@ router.post("/register", async (req: Request, res: Response) => {
 router.get("/checkauth", verifyToken, async (req: Request, res: Response) => {
   const token = req.cookies["authtoken"];
   const jwt_secret: any = process.env.JWT_SECRET;
-  const jwt_payload: JwtPayload<{ _id: string }> = jwt.verify(
+  const jwt_payload = jwt.verify(
     token,
     jwt_secret
-  );
+  ) as { _id: string }
 
   const user = await User.findById(jwt_payload._id);
 
