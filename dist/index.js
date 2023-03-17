@@ -34,7 +34,7 @@ if (process.env.MONGO_URL) {
     })
         .catch((err) => console.log(err));
 }
-const whiteList = ['http://localhost:3000'];
+const whiteList = ['http://localhost:3000', 'https://babbel-frontend.vercel.app'];
 const corsOptions = {
     origin: (origin, callback) => {
         if (origin && whiteList.includes(origin)) {
@@ -53,7 +53,7 @@ app.use((0, cors_1.default)(corsOptions));
 const port = process.env.PORT;
 const httpServer = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(httpServer, {
-    cors: corsOptions,
+    cors: Object.assign(Object.assign({}, corsOptions), { origin: true }),
     maxHttpBufferSize: 1e8
 });
 app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -61,7 +61,7 @@ app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 }));
 app.use('/api/conversation', conversation_1.conversationRouter);
 app.use('/api/user', user_1.userRouter);
-app.options('/api/auth', (0, cors_1.default)());
+//app.options('/api/auth', cors());
 app.use('/api/auth', auth_1.authRouter);
 app.use('/api/room', room_1.roomRouter);
 app.use(errorHandler_1.errorHandler);

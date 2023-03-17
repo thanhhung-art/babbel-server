@@ -31,6 +31,7 @@ export const socketHandler = (
 ) => {
   socket.on("user_connected", (id: string) => {
     const userIndex = users_online.findIndex((user) => user.id === id);
+    console.log(id + " " + Date.now());
     if (userIndex === -1) {
       users_online.push({ id, socketId: socket.id });
     } else {
