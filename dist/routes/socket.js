@@ -15,7 +15,6 @@ const users_online = [];
 const socketHandler = (io, socket) => {
     socket.on("user_connected", (id) => {
         const userIndex = users_online.findIndex((user) => user.id === id);
-        console.log(id + " " + Date.now());
         if (userIndex === -1) {
             users_online.push({ id, socketId: socket.id });
         }

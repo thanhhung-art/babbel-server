@@ -1,17 +1,17 @@
-import express, { Express, Request, Response } from 'express';
-import dotenv from 'dotenv';
-import { createServer } from 'http';
-import { Server, Socket } from 'socket.io';
-import cors from 'cors';
-import { DefaultEventsMap } from 'socket.io/dist/typed-events';
-import mongoose from 'mongoose';
-import { errorHandler } from './utils/errorHandler';
-import { authRouter } from './routes/auth';
-import { userRouter } from './routes/user';
-import { conversationRouter } from './routes/conversation';
-import { socketHandler } from './routes/socket';
-import { roomRouter } from './routes/room';
-import cookieParser from 'cookie-parser';
+import express, { Express, Request, Response } from "express";
+import dotenv from "dotenv";
+import { createServer } from "http";
+import { Server, Socket } from "socket.io";
+import cors from "cors";
+import { DefaultEventsMap } from "socket.io/dist/typed-events";
+import mongoose from "mongoose";
+import { errorHandler } from "./utils/errorHandler";
+import { authRouter } from "./routes/auth";
+import { userRouter } from "./routes/user";
+import { conversationRouter } from "./routes/conversation";
+import { socketHandler } from "./routes/socket";
+import { roomRouter } from "./routes/room";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -19,27 +19,24 @@ if (process.env.MONGO_URL) {
   mongoose
     .connect(process.env.MONGO_URL)
     .then(() => {
-      console.log('mongodb is ready');
+      console.log("mongodb is ready");
     })
     .catch((err) => console.log(err));
 }
 
-const whiteList = ['http://localhost:3000', 'https://babbel-frontend.vercel.app']
-const corsOptions = {
-  origin: (origin: string | undefined, callback: (err: Error | null, origin?: StaticOrigin | undefined) => void) => {
-    if (origin && whiteList.includes(origin)) {
-      callback(null, true)
-      return
-    }
+const whiteList = [
+  "http://localhost:3000",
+  "https://babbel-frontend.vercel.app",
+]
 
-    callback(new Error("not allowed by CORS"))
-  },
+const corsOptions = {
+  origin: whiteList,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-}
+  methods: ["GET", "POST", "PUT", "DELETE"],
+};
 
 const app: Express = express();
-app.use(cookieParser())
+app.use(cookieParser());
 app.use(express.json());
 app.use(cors(corsOptions));
 
@@ -52,19 +49,18 @@ const io = new Server<
   User
 >(httpServer, {
   cors: { ...corsOptions, origin: true },
-  maxHttpBufferSize: 1e8
+  maxHttpBufferSize: 1e8,
 });
 
-app.get('/', async (req: Request, res: Response) => {
-  res.status(200).json('hello');
+app.get("/", async (req: Request, res: Response) => {
+  res.status(200).json("hello");
 });
-app.use('/api/conversation', conversationRouter);
-app.use('/api/user', userRouter);
+app.use("/api/conversation", conversationRouter);
+app.use("/api/user", userRouter);
 
-//app.options('/api/auth', cors());
-app.use('/api/auth', authRouter);
+app.use("/api/auth", authRouter);
 
-app.use('/api/room', roomRouter)
+app.use("/api/room", roomRouter);
 app.use(errorHandler);
 
 io.use((socket, next) => {
@@ -72,12 +68,12 @@ io.use((socket, next) => {
   next();
 });
 
-io.on('connection', (socket: Socket) => {
-  socketHandler(io, socket)
+io.on("connection", (socket: Socket) => {
+  socketHandler(io, socket);
 });
 
 httpServer.listen(port, () => {
-  console.log('server is running at port ' + port);
+  console.log("server is running at port " + port);
 });
 
-module.exports = app
+module.exports = app;

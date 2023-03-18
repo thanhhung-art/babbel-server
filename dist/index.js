@@ -30,21 +30,18 @@ if (process.env.MONGO_URL) {
     mongoose_1.default
         .connect(process.env.MONGO_URL)
         .then(() => {
-        console.log('mongodb is ready');
+        console.log("mongodb is ready");
     })
         .catch((err) => console.log(err));
 }
-const whiteList = ['http://localhost:3000', 'https://babbel-frontend.vercel.app'];
+const whiteList = [
+    "http://localhost:3000",
+    "https://babbel-frontend.vercel.app",
+];
 const corsOptions = {
-    origin: (origin, callback) => {
-        if (origin && whiteList.includes(origin)) {
-            callback(null, true);
-            return;
-        }
-        callback(new Error("not allowed by CORS"));
-    },
+    origin: whiteList,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ["GET", "POST", "PUT", "DELETE"],
 };
 const app = (0, express_1.default)();
 app.use((0, cookie_parser_1.default)());
@@ -54,25 +51,24 @@ const port = process.env.PORT;
 const httpServer = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(httpServer, {
     cors: Object.assign(Object.assign({}, corsOptions), { origin: true }),
-    maxHttpBufferSize: 1e8
+    maxHttpBufferSize: 1e8,
 });
-app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    res.status(200).json('hello');
+app.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    res.status(200).json("hello");
 }));
-app.use('/api/conversation', conversation_1.conversationRouter);
-app.use('/api/user', user_1.userRouter);
-//app.options('/api/auth', cors());
-app.use('/api/auth', auth_1.authRouter);
-app.use('/api/room', room_1.roomRouter);
+app.use("/api/conversation", conversation_1.conversationRouter);
+app.use("/api/user", user_1.userRouter);
+app.use("/api/auth", auth_1.authRouter);
+app.use("/api/room", room_1.roomRouter);
 app.use(errorHandler_1.errorHandler);
 io.use((socket, next) => {
     socket.data = socket.handshake.auth.user;
     next();
 });
-io.on('connection', (socket) => {
+io.on("connection", (socket) => {
     (0, socket_1.socketHandler)(io, socket);
 });
 httpServer.listen(port, () => {
-    console.log('server is running at port ' + port);
+    console.log("server is running at port " + port);
 });
 module.exports = app;
