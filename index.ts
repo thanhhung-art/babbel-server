@@ -24,7 +24,7 @@ if (process.env.MONGO_URL) {
     .catch((err) => console.log(err));
 }
 
-const whiteList = new Set(['http://localhost:3000', 'https://babbel-frontend.vercel.app'])
+const whiteList = new Set(['http://localhost:3000', 'https://babbel-frontend.vercel.app', '1337729'])
 
 const corsOptionsDelegate = (req: CorsRequest, callback: (err: Error | null, options?: CorsOptions) => void) => {
   let corsOptions = { origin: false, credentials: true, methods: ["GET", "POST", "PUT", "DELETE"] }
