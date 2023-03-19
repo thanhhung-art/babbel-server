@@ -29,6 +29,7 @@ const whiteList = new Set(['http://localhost:3000', 'https://babbel-frontend.ver
 const corsOptionsDelegate = (req: CorsRequest, callback: (err: Error | null, options?: CorsOptions) => void) => {
   let corsOptions = { origin: false, credentials: true, methods: ["GET", "POST", "PUT", "DELETE"] }
   let origin = req.headers["origin"]
+  console.log(origin);
 
   if (whiteList.has(origin)) {
     corsOptions.origin = true
@@ -57,13 +58,15 @@ const io = new Server<
   maxHttpBufferSize: 1e8,
 });
 
+app.options("*", cors())
 app.get("/", async (req: Request, res: Response) => {
   res.status(200).json("hello");
 });
+
+app.use("/api/auth", authRouter);
 app.use("/api/conversation", conversationRouter);
 app.use("/api/user", userRouter);
 
-app.use("/api/auth", authRouter);
 
 app.use("/api/room", roomRouter);
 app.use(errorHandler);

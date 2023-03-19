@@ -34,10 +34,11 @@ if (process.env.MONGO_URL) {
     })
         .catch((err) => console.log(err));
 }
-const whiteList = new Set(['http://localhost:3000', 'https://babbel-frontend.vercel.app']);
+const whiteList = new Set(['http://localhost:3000', 'https://babbel-frontend.vercel.app', '1337729']);
 const corsOptionsDelegate = (req, callback) => {
     let corsOptions = { origin: false, credentials: true, methods: ["GET", "POST", "PUT", "DELETE"] };
     let origin = req.headers["origin"];
+    console.log(origin);
     if (whiteList.has(origin)) {
         corsOptions.origin = true;
         callback(null, corsOptions);
@@ -55,12 +56,13 @@ const io = new socket_io_1.Server(httpServer, {
     cors: corsOptionsDelegate,
     maxHttpBufferSize: 1e8,
 });
+app.options("*", (0, cors_1.default)());
 app.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.status(200).json("hello");
 }));
+app.use("/api/auth", auth_1.authRouter);
 app.use("/api/conversation", conversation_1.conversationRouter);
 app.use("/api/user", user_1.userRouter);
-app.use("/api/auth", auth_1.authRouter);
 app.use("/api/room", room_1.roomRouter);
 app.use(errorHandler_1.errorHandler);
 io.use((socket, next) => {
