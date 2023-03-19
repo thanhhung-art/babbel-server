@@ -24,21 +24,26 @@ if (process.env.MONGO_URL) {
     .catch((err) => console.log(err));
 }
 
-const whiteList = [
-  "http://localhost:3000",
-  "https://babbel-frontend.vercel.app",
-]
+const whiteList = new Set(['http://localhost:3000', 'https://babbel-frontend.vercel.app'])
 
-const corsOptions = {
-  origin: whiteList,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-};
+const corsOptionsDelegate = (req: CorsRequest, callback: (err: Error | null, options?: CorsOptions) => void) => {
+  let corsOptions = { origin: false, credentials: true, methods: ["GET", "POST", "PUT", "DELETE"] }
+  let origin = req.headers["origin"]
+
+  if (whiteList.has(origin)) {
+    corsOptions.origin = true
+    callback(null, corsOptions)
+    return
+  }
+
+  callback(new Error("Not allowed by CORS"))
+}
+
 
 const app: Express = express();
 app.use(cookieParser());
 app.use(express.json());
-app.use(cors(corsOptions));
+app.use(cors(corsOptionsDelegate));
 
 const port = process.env.PORT;
 const httpServer = createServer(app);
@@ -48,7 +53,7 @@ const io = new Server<
   DefaultEventsMap,
   User
 >(httpServer, {
-  cors: { ...corsOptions, origin: true },
+  cors: corsOptionsDelegate,
   maxHttpBufferSize: 1e8,
 });
 
