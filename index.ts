@@ -34,10 +34,9 @@ const corsOptionsDelegate = (req: CorsRequest, callback: (err: Error | null, opt
   if (whiteList.has(origin)) {
     corsOptions.origin = true
     callback(null, corsOptions)
-    return
+  } else {
+    callback(new Error("Not allowed by CORS"))
   }
-
-  callback(new Error("Not allowed by CORS"))
 }
 
 
@@ -66,8 +65,6 @@ app.get("/", async (req: Request, res: Response) => {
 app.use("/api/auth", authRouter);
 app.use("/api/conversation", conversationRouter);
 app.use("/api/user", userRouter);
-
-
 app.use("/api/room", roomRouter);
 app.use(errorHandler);
 

@@ -42,9 +42,10 @@ const corsOptionsDelegate = (req, callback) => {
     if (whiteList.has(origin)) {
         corsOptions.origin = true;
         callback(null, corsOptions);
-        return;
     }
-    callback(new Error("Not allowed by CORS"));
+    else {
+        callback(new Error("Not allowed by CORS"));
+    }
 };
 const app = (0, express_1.default)();
 app.use((0, cookie_parser_1.default)());
@@ -56,7 +57,7 @@ const io = new socket_io_1.Server(httpServer, {
     cors: corsOptionsDelegate,
     maxHttpBufferSize: 1e8,
 });
-app.options("*", (0, cors_1.default)());
+//app.options("*", cors())
 app.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.status(200).json("hello");
 }));
