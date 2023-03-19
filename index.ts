@@ -58,7 +58,7 @@ const io = new Server<
   maxHttpBufferSize: 1e8,
 });
 
-app.options("*", cors())
+//app.options("*", cors())
 app.get("/", async (req: Request, res: Response) => {
   res.status(200).json("hello");
 });
