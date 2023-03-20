@@ -48,6 +48,14 @@ const io = new Server<
   maxHttpBufferSize: 1e8,
 });
 
+app.use((req, res, next) => {
+  const allowedOrigins = ["http://localhost:3000", "https://babbel-frontend.vercel.app/", "https://vercel.com"];
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  next();
+});
 
 app.get("/", async (req: Request, res: Response) => {
   res.status(200).json("hello");
