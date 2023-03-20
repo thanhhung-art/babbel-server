@@ -55,12 +55,11 @@ const io = new Server<
   maxHttpBufferSize: 1e8,
 });
 
-app.use("/api/auth", authRouter);
 
-app.options("*", verifyToken, cors());
 app.get("/", async (req: Request, res: Response) => {
   res.status(200).json("hello");
 });
+app.use("/api/auth", authRouter);
 
 app.use("/api/conversation", conversationRouter);
 app.use("/api/user", userRouter);

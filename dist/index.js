@@ -25,7 +25,6 @@ const conversation_1 = require("./routes/conversation");
 const socket_1 = require("./routes/socket");
 const room_1 = require("./routes/room");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
-const verifyToken_1 = require("./routes/verifyToken");
 mongoose_1.default.set("strictQuery", true);
 dotenv_1.default.config();
 if (process.env.MONGO_URL) {
@@ -57,11 +56,10 @@ const io = new socket_io_1.Server(httpServer, {
     cors: corsOptions,
     maxHttpBufferSize: 1e8,
 });
-app.use("/api/auth", auth_1.authRouter);
-app.options("*", verifyToken_1.verifyToken, (0, cors_1.default)());
 app.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.status(200).json("hello");
 }));
+app.use("/api/auth", auth_1.authRouter);
 app.use("/api/conversation", conversation_1.conversationRouter);
 app.use("/api/user", user_1.userRouter);
 app.use("/api/room", room_1.roomRouter);
