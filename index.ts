@@ -26,21 +26,6 @@ if (process.env.MONGO_URL) {
     .catch((err) => console.log(err));
 }
 
-// const whiteList = new Set(['http://localhost:3000', 'https://babbel-frontend.vercel.app', '1337729'])
-
-// const corsOptionsDelegate = (req: CorsRequest, callback: (err: Error | null, options?: CorsOptions) => void) => {
-//   let corsOptions = { origin: false, credentials: true, methods: ["GET", "POST", "PUT", "DELETE"] }
-//   let origin = req.headers["origin"]
-//   console.log(origin);
-
-//   if (whiteList.has(origin)) {
-//     corsOptions.origin = true
-//     callback(null, corsOptions)
-//   } else {
-//     callback(new Error("Not allowed by CORS"))
-//   }
-// }
-
 const corsOptions = {
   origin: [
     "http://localhost:3000",
@@ -95,4 +80,21 @@ httpServer.listen(port, () => {
   console.log("server is running at port " + port);
 });
 
-module.exports = app;
+const alllowCors = ( fn: express.Express ) => async (req: Request, res: Response) => {
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  // another common pattern
+  // res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  )
+  if (req.method === 'OPTIONS') {
+    res.status(200).end()
+    return
+  }
+  return await fn(req, res)
+}
+
+module.exports = alllowCors(app)
