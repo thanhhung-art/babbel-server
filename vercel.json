@@ -6,10 +6,15 @@
       "use": "@vercel/node"
     }
   ],
-  "routes": [
+  "rewrites": [{ "source": "/(.*)", "destination": "dist/index.js" }],
+  "headers": [
     {
-      "src": "/(.*)",
-      "dest": "dist/index.js"
+      "source": "/(.*)",
+      "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }]
+    },
+    {
+      "source": "https://babbel-server.vercel.app/(.*)",
+      "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }]
     }
   ]
 }
