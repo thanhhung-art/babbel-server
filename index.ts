@@ -48,9 +48,9 @@ const corsOptions = {
 
 
 const app: Express = express();
+app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
-app.use(cors(corsOptions));
 
 const port = process.env.PORT;
 const httpServer = createServer(app);
