@@ -51,7 +51,6 @@ if (process.env.MONGO_URL) {
 const corsOptions = {
     origin: true,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"]
 };
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)(corsOptions));
