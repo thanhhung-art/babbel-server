@@ -36,14 +36,7 @@ if (process.env.MONGO_URL) {
         .catch((err) => console.log(err));
 }
 const corsOptions = {
-    origin: [
-        "http://localhost:3000",
-        "https://babbel-frontend.vercel.app",
-        "https://vercel.com",
-        "https://babbel-frontend-git-main-thanhhung-art.vercel.app/",
-        "https://babbel-frontend-thanhhung-art.vercel.app/",
-        "1337729",
-    ],
+    origin: true,
     credentials: true,
 };
 const app = (0, express_1.default)();
