@@ -41,7 +41,7 @@ if (process.env.MONGO_URL) {
 // }
 
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://babbel-frontend.vercel.app', '1337729'],
+  origin: true,
   credentials: true, 
   methods: ["GET", "POST", "PUT", "DELETE"]
 }
