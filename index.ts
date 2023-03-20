@@ -42,7 +42,7 @@ if (process.env.MONGO_URL) {
 // }
 
 const corsOptions = {
-  origin: true,
+  origin: ['http://localhost:3000', 'https://babbel-frontend.vercel.app', '1337729', 'https://vercel.com'],
   credentials: true, 
 }
 
@@ -63,12 +63,13 @@ const io = new Server<
   maxHttpBufferSize: 1e8,
 });
 
+app.use("/api/auth", authRouter);
+
 app.options("*", verifyToken , cors())
 app.get("/", async (req: Request, res: Response) => {
   res.status(200).json("hello");
 });
 
-app.use("/api/auth", authRouter);
 app.use("/api/conversation", conversationRouter);
 app.use("/api/user", userRouter);
 app.use("/api/room", roomRouter);
