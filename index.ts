@@ -12,6 +12,7 @@ import { conversationRouter } from "./routes/conversation";
 import { socketHandler } from "./routes/socket";
 import { roomRouter } from "./routes/room";
 import cookieParser from "cookie-parser";
+import { verifyToken } from "./routes/verifyToken";
 
 mongoose.set("strictQuery", true)
 dotenv.config();
@@ -46,7 +47,6 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE"]
 }
 
-
 const app: Express = express();
 app.use(cors(corsOptions));
 app.use(cookieParser());
@@ -64,7 +64,7 @@ const io = new Server<
   maxHttpBufferSize: 1e8,
 });
 
-app.options("*", cors())
+app.options("*", verifyToken , cors())
 app.get("/", async (req: Request, res: Response) => {
   res.status(200).json("hello");
 });
