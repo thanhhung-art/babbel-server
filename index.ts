@@ -13,6 +13,7 @@ import { socketHandler } from "./routes/socket";
 import { roomRouter } from "./routes/room";
 import cookieParser from "cookie-parser";
 
+mongoose.set("strictQuery", true)
 dotenv.config();
 
 if (process.env.MONGO_URL) {
@@ -57,7 +58,7 @@ const io = new Server<
   maxHttpBufferSize: 1e8,
 });
 
-//app.options("*", cors())
+app.options("*", cors())
 app.get("/", async (req: Request, res: Response) => {
   res.status(200).json("hello");
 });

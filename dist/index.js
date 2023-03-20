@@ -25,6 +25,7 @@ const conversation_1 = require("./routes/conversation");
 const socket_1 = require("./routes/socket");
 const room_1 = require("./routes/room");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
+mongoose_1.default.set("strictQuery", true);
 dotenv_1.default.config();
 if (process.env.MONGO_URL) {
     mongoose_1.default
@@ -57,7 +58,7 @@ const io = new socket_io_1.Server(httpServer, {
     cors: corsOptionsDelegate,
     maxHttpBufferSize: 1e8,
 });
-//app.options("*", cors())
+app.options("*", (0, cors_1.default)());
 app.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.status(200).json("hello");
 }));
