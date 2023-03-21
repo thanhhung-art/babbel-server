@@ -49,14 +49,6 @@ const io = new socket_io_1.Server(httpServer, {
     cors: corsOptions,
     maxHttpBufferSize: 1e8,
 });
-app.use((req, res, next) => {
-    const allowedOrigins = ["http://localhost:3000", "https://babbel-frontend.vercel.app/", "https://vercel.com"];
-    const origin = req.headers.origin;
-    if (origin && allowedOrigins.includes(origin)) {
-        res.setHeader("Access-Control-Allow-Origin", origin);
-    }
-    next();
-});
 app.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.status(200).json("hello");
 }));
@@ -75,4 +67,3 @@ io.on("connection", (socket) => {
 httpServer.listen(port, () => {
     console.log("server is running at port " + port);
 });
-module.exports = app;

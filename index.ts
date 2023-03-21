@@ -12,7 +12,6 @@ import { conversationRouter } from "./routes/conversation";
 import { socketHandler } from "./routes/socket";
 import { roomRouter } from "./routes/room";
 import cookieParser from "cookie-parser";
-import { verifyToken } from "./routes/verifyToken";
 
 mongoose.set("strictQuery", true);
 dotenv.config();
@@ -48,15 +47,6 @@ const io = new Server<
   maxHttpBufferSize: 1e8,
 });
 
-app.use((req, res, next) => {
-  const allowedOrigins = ["http://localhost:3000", "https://babbel-frontend.vercel.app/", "https://vercel.com"];
-  const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-  next();
-});
-
 app.get("/", async (req: Request, res: Response) => {
   res.status(200).json("hello");
 });
@@ -79,7 +69,3 @@ io.on("connection", (socket: Socket) => {
 httpServer.listen(port, () => {
   console.log("server is running at port " + port);
 });
-
-
-
-module.exports = app
