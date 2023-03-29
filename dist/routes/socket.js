@@ -184,6 +184,9 @@ const socketHandler = (io, socket) => {
             if (receiver)
                 io.to(receiver.socketId).emit("dont_like_message", currConversationId, userId, messageId);
         }
+        else {
+            io.to(currConversationId).emit("dont_like_message", currConversationId, userId, messageId);
+        }
         (0, query_1.dontLikeMessage)(currConversationId, userId, messageId, otherId);
     });
     socket.on("disconnect", () => {

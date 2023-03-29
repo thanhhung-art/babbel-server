@@ -327,6 +327,8 @@ export const socketHandler = (
       if (otherId) {
         const receiver = users_online.find(user => user.id === otherId)
         if (receiver) io.to(receiver.socketId).emit("dont_like_message", currConversationId, userId, messageId)
+      } else {
+        io.to(currConversationId).emit("dont_like_message", currConversationId, userId, messageId)
       }
       dontLikeMessage(currConversationId, userId, messageId, otherId)
     }
