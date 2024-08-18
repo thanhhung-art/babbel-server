@@ -1,0 +1,216 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("DATABASE_URL_SHADOW")
+}
+
+model User {
+  id                    String                  @id @default(uuid())
+  email                 String                  @unique
+  name                  String
+  password              String
+  avatar                String?
+  salt                  String?
+  createdAt             DateTime                @default(now())
+  updateAt              DateTime                @updatedAt
+  rooms                 RoomMember[]
+  friends               Friends[]               @relation(name: "UserFriends")
+  friendOf              Friends[]               @relation(name: "FriendUsers")
+  BannedUser            BannedUser[]
+  JoinRequest           JoinRequest[]
+  FriendRequest         FriendRequest[]         @relation(name: "FriendRequest")
+  RequestFriend         FriendRequest[]         @relation(name: "RequestFriend")
+  RoomAdmin             RoomAdmin[]
+  UsersOnlines          UserOnline?
+  Conversations         Conversation[]          @relation(name: "UserConversations")
+  MessageInConversation MessageInConversation[]
+  MessageInRoom         MessageInRoom[]
+  Chatting              Chatting[]
+}
+
+model Room {
+  id             String          @id @default(uuid())
+  name           String
+  avatar         String
+  createdAt      DateTime        @default(now())
+  updateAt       DateTime        @updatedAt
+  members        RoomMember[]
+  BannedUser     BannedUser[]
+  JoinRequest    JoinRequest[]
+  RoomAdmin      RoomAdmin[]
+  MessagesInRoom MessageInRoom[]
+  Chatting       Chatting[]
+}
+
+model RoomAdmin {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+  roomId    String
+  createdAt DateTime @default(now())
+  udpateAt  DateTime @updatedAt
+}
+
+model RoomMember {
+  id       String   @id @default(uuid())
+  room     Room     @relation(fields: [roomId], references: [id])
+  roomId   String
+  user     User?    @relation(fields: [userId], references: [id])
+  userId   String
+  role     String
+  joinedAt DateTime @default(now())
+}
+
+model MessageInConversation {
+  id             String              @id @default(uuid())
+  conversation   Conversation        @relation(fields: [conversationId], references: [id])
+  conversationId String
+  user           User                @relation(fields: [userId], references: [id])
+  userId         String
+  content        String
+  createdAt      DateTime            @default(now())
+  udpateAt       DateTime            @updatedAt
+  attachments    MessageAttachment[]
+}
+
+model MessageInRoom {
+  id                String              @id @default(uuid())
+  room              Room                @relation(fields: [roomId], references: [id])
+  roomId            String
+  user              User                @relation(fields: [userId], references: [id])
+  userId            String
+  content           String
+  createdAt         DateTime            @default(now())
+  udpateAt          DateTime            @updatedAt
+  MessageAttachment MessageAttachment[]
+}
+
+model MessageAttachment {
+  id                      String                 @id @default(uuid())
+  type                    String
+  createdAt               DateTime               @default(now())
+  udpateAt                DateTime               @updatedAt
+  MessageInConversation   MessageInConversation? @relation(fields: [messageInConversationId], references: [id])
+  messageInConversationId String?
+  MessageInRoom           MessageInRoom?         @relation(fields: [messageInRoomId], references: [id])
+  messageInRoomId         String?
+  images                  images?                @relation(fields: [imagesId], references: [id])
+  imagesId                String?
+  files                   files?                 @relation(fields: [fileId], references: [id])
+  fileId                  String?
+  videos                  videos?                @relation(fields: [videosId], references: [id])
+  videosId                String?
+}
+
+model Friends {
+  id        String   @id @default(uuid())
+  user      User     @relation(name: "UserFriends", fields: [userId], references: [id])
+  userId    String
+  friend    User     @relation(name: "FriendUsers", fields: [friendId], references: [id])
+  friendId  String
+  createdAt DateTime @default(now())
+  udpateAt  DateTime @updatedAt
+}
+
+model BannedUser {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+  roomId    String
+  createdAt DateTime @default(now())
+  udpateAt  DateTime @updatedAt
+}
+
+model JoinRequest {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+  roomId    String
+  createdAt DateTime @default(now())
+  udpateAt  DateTime @updatedAt
+}
+
+model FriendRequest {
+  id        String   @id @default(uuid())
+  user      User     @relation(name: "FriendRequest", fields: [userId], references: [id])
+  userId    String
+  friend    User     @relation(name: "RequestFriend", fields: [friendId], references: [id])
+  friendId  String
+  createdAt DateTime @default(now())
+  udpateAt  DateTime @updatedAt
+}
+
+model UserOnline {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
+  socketId  String
+  createdAt DateTime @default(now())
+  udpateAt  DateTime @updatedAt
+}
+
+model Conversation {
+  id                    String                  @id @default(uuid())
+  participants          User[]                  @relation(name: "UserConversations")
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  MessageInConversation MessageInConversation[]
+  Chatting              Chatting[]
+}
+
+model Chatting {
+  id             String        @id @default(uuid())
+  user           User          @relation(fields: [userId], references: [id])
+  userId         String
+  room           Room?         @relation(fields: [roomId], references: [id])
+  roomId         String?
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  createdAt      DateTime      @default(now())
+  udpateAt       DateTime      @updatedAt
+}
+
+model images {
+  id                   String              @id @default(uuid())
+  name                 String
+  data                 Bytes
+  createdAt            DateTime            @default(now())
+  udpateAt             DateTime            @updatedAt
+  messageAttcachmentId String
+  messageAttachment    MessageAttachment[]
+}
+
+model files {
+  id                   String              @id @default(uuid())
+  name                 String
+  type                 String
+  url                  String              @default("")
+  data                 Bytes?
+  createdAt            DateTime            @default(now())
+  udpateAt             DateTime            @updatedAt
+  messageAttcachmentId String
+  MessageAttachment    MessageAttachment[]
+}
+
+model videos {
+  id                   String              @id @default(uuid())
+  name                 String
+  data                 Bytes
+  createdAt            DateTime            @default(now())
+  udpateAt             DateTime            @updatedAt
+  messageAttcachmentId String
+  MessageAttachment    MessageAttachment[]
+}
