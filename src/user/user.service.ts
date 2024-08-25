@@ -361,6 +361,14 @@ export class UserService {
     }
     // remove when develop success
     if (await this.prismaService.userOnline.findFirst({ where: { userId } })) {
+      await this.prismaService.userOnline.update({
+        where: {
+          userId,
+        },
+        data: {
+          socketId,
+        },
+      });
       return;
     }
     return await this.prismaService.userOnline.create({
