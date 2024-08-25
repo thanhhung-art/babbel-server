@@ -64,7 +64,10 @@ export class RoomService {
   async getMessagesByRoomId(roomId: string) {
     const messages = await this.prismaService.messageInRoom.findMany({
       where: { roomId },
-      include: { user: { select: { name: true } } },
+      include: {
+        user: { select: { name: true } },
+        files: { select: { url: true } },
+      },
       orderBy: { createdAt: 'asc' },
     });
 
