@@ -9,7 +9,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { UserService } from 'src/user/user.service';
 import { ChatService } from './chat.service';
-import { ICreateMessage } from './type';
+import { ICreateMessageInConversation, ICreateMessageInRoom } from './type';
 
 @WebSocketGateway()
 export class ChatGateway {
@@ -71,17 +71,30 @@ export class ChatGateway {
       conversationId,
       friendId,
       content,
-    }: { conversationId: string; content: string; friendId: string },
+      urls,
+    }: {
+      conversationId: string;
+      content: string;
+      friendId: string;
+      urls: string[];
+    },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
     const userId = client.handshake.query.userId as string;
-    const friendSocket = await this.userService.getUserSocketId(friendId);
-    const saveMessage = await this.chatService.createMessage({
+    const dataToCreateMessage: ICreateMessageInConversation = {
       content,
       userId,
       conversationId,
-    });
+    };
+
+    if (urls.length > 0) {
+      dataToCreateMessage.files = urls;
+    }
+
+    const friendSocket = await this.userService.getUserSocketId(friendId);
+    const saveMessage =
+      await this.chatService.createMessage(dataToCreateMessage);
     this.server.to(friendSocket).emit('new-message-from-friend', saveMessage);
     client.emit('new-message-from-friend', saveMessage);
   }
@@ -168,23 +181,23 @@ export class ChatGateway {
     {
       roomId,
       content,
-      files,
+      urls,
     }: {
       roomId: string;
       content: string;
-      files?: string[];
+      urls: string[];
     },
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
     const userId = client.handshake.query.userId as string;
-    const dataToCreateMessage: ICreateMessage = {
+    const dataToCreateMessage: ICreateMessageInRoom = {
       content,
       userId,
       roomId,
     };
 
-    if (files) {
-      dataToCreateMessage.files = files;
+    if (urls.length > 0) {
+      dataToCreateMessage.files = urls;
     }
 
     const saveMessage =

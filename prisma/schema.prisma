@@ -82,6 +82,7 @@ model MessageInConversation {
   createdAt      DateTime           @default(now())
   udpateAt       DateTime           @updatedAt
   attachments    MessageAttachment?
+  files          Files[]
 }
 
 model MessageInRoom {
@@ -195,17 +196,19 @@ model images {
 }
 
 model Files {
-  id                  String             @id @default(uuid())
-  name                String
-  type                String
-  url                 String             @default("")
-  data                Bytes?
-  createdAt           DateTime           @default(now())
-  udpateAt            DateTime           @updatedAt
-  messageAttachmentId String?
-  messageAttachment   MessageAttachment? @relation(fields: [messageAttachmentId], references: [id])
-  messageInRoomId     String?
-  messageInRoom       MessageInRoom?     @relation(fields: [messageInRoomId], references: [id])
+  id                      String                 @id @default(uuid())
+  name                    String
+  type                    String
+  url                     String                 @default("")
+  data                    Bytes?
+  createdAt               DateTime               @default(now())
+  udpateAt                DateTime               @updatedAt
+  messageAttachmentId     String?
+  messageAttachment       MessageAttachment?     @relation(fields: [messageAttachmentId], references: [id])
+  messageInRoomId         String?
+  messageInRoom           MessageInRoom?         @relation(fields: [messageInRoomId], references: [id])
+  messageInConversationId String?
+  messageInConversation   MessageInConversation? @relation(fields: [messageInConversationId], references: [id])
 }
 
 model videos {

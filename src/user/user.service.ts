@@ -295,11 +295,10 @@ export class UserService {
             name: true,
           },
         },
-        attachments: {
+        files: {
           select: {
             id: true,
-            type: true,
-            files: true,
+            url: true,
           },
         },
       },

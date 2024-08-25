@@ -13,17 +13,27 @@ export class ChatService {
     content: string;
     userId: string;
     conversationId: string;
+    files?: string[];
   }) {
-    return await this.prismaService.messageInConversation.create({
-      data: {
-        content: data.content,
-        conversation: {
-          connect: { id: data.conversationId },
-        },
-        user: {
-          connect: { id: data.userId },
-        },
+    const dataToCreate = {
+      content: data.content,
+      conversation: {
+        connect: { id: data.conversationId },
       },
+      user: {
+        connect: { id: data.userId },
+      },
+    };
+
+    if (data.files) {
+      dataToCreate['files'] = {
+        connect: data.files.map((fileId) => ({ id: fileId })),
+      };
+    }
+
+    return await this.prismaService.messageInConversation.create({
+      data: dataToCreate,
+      include: { files: { select: { url: true } } },
     });
   }
 
