@@ -43,10 +43,14 @@ export class ChatService {
   async createMessageAttachment(data: {
     type: string;
     messageInRoomId: string;
+    fileIds: string[];
   }) {
     return await this.prismaService.messageAttachment.create({
       data: {
         type: data.type,
+        files: {
+          connect: data.fileIds.map((fileId) => ({ id: fileId })),
+        },
         MessageInRoom: {
           connect: { id: data.messageInRoomId },
         },
@@ -58,20 +62,37 @@ export class ChatService {
     content: string;
     userId: string;
     roomId: string;
+    files?: string[];
   }) {
-    const message = await this.prismaService.messageInRoom.create({
-      data: {
-        content: data.content,
-        room: {
-          connect: { id: data.roomId },
-        },
-        user: {
-          connect: { id: data.userId },
-        },
+    const dataToCreate = {
+      content: data.content,
+      room: {
+        connect: { id: data.roomId },
       },
+      user: {
+        connect: { id: data.userId },
+      },
+    };
+
+    if (data.files) {
+      dataToCreate['files'] = {
+        connect: data.files.map((fileId) => ({ id: fileId })),
+      };
+    }
+
+    const message = await this.prismaService.messageInRoom.create({
+      data: dataToCreate,
+      include: { files: { select: { url: true } } },
     });
 
     return message;
+  }
+
+  async getMessageInRoomWithAttachments(id: string) {
+    return await this.prismaService.messageInRoom.findFirst({
+      where: { id },
+      include: { messageAttachment: true },
+    });
   }
 
   async updateMessageInRoom(id: string, value: string) {
@@ -88,7 +109,7 @@ export class ChatService {
 
     if (attachment) {
       await this.prismaService.files.deleteMany({
-        where: { messageAttcachmentId: attachment.id },
+        where: { messageAttachmentId: attachment.id },
       });
 
       await this.prismaService.messageAttachment.delete({
@@ -123,10 +144,7 @@ export class ChatService {
           name: data.fileName,
           url: fileUploaded,
           type: data.type,
-          messageAttcachmentId: data.messageAttachmentId,
-          MessageAttachment: {
-            connect: { id: data.messageAttachmentId },
-          },
+          messageAttachmentId: '',
         },
       });
     } catch (error) {
@@ -136,7 +154,13 @@ export class ChatService {
 
   async getFiles(id: string) {
     return await this.prismaService.files.findMany({
-      where: { messageAttcachmentId: id },
+      where: { messageAttachmentId: id },
+    });
+  }
+
+  async getMessageAttachment(id: string) {
+    return await this.prismaService.messageAttachment.findFirst({
+      where: { id },
     });
   }
 }

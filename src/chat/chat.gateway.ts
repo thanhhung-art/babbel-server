@@ -9,6 +9,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { UserService } from 'src/user/user.service';
 import { ChatService } from './chat.service';
+import { ICreateMessage } from './type';
 
 @WebSocketGateway()
 export class ChatGateway {
@@ -25,7 +26,6 @@ export class ChatGateway {
 
   async handleConnection(client: Socket): Promise<void> {
     const userId = client.handshake.query.userId as string;
-    console.log(`Client connected: ${client.id} - ${userId}`);
 
     if (userId) {
       try {
@@ -48,7 +48,6 @@ export class ChatGateway {
   }
 
   async handleDisconnect(client: Socket): Promise<void> {
-    console.log(`Client disconnected: ${client.id}`);
     const userId = client.handshake.query.userId as string;
     if (userId) {
       try {
@@ -170,27 +169,26 @@ export class ChatGateway {
       roomId,
       content,
       files,
-    }: { roomId: string; content: string; files: boolean },
+    }: {
+      roomId: string;
+      content: string;
+      files?: string[];
+    },
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
     const userId = client.handshake.query.userId as string;
-    const saveMessage = await this.chatService.createMessageInRoom({
+    const dataToCreateMessage: ICreateMessage = {
       content,
       userId,
       roomId,
-    });
+    };
 
     if (files) {
-      const messageAttachment = await this.chatService.createMessageAttachment({
-        type: 'image',
-        messageInRoomId: saveMessage.id,
-      });
-
-      client.emit(
-        'get-message-attachment-id-to-save-files',
-        messageAttachment.id,
-      );
+      dataToCreateMessage.files = files;
     }
+
+    const saveMessage =
+      await this.chatService.createMessageInRoom(dataToCreateMessage);
 
     this.server.to(roomId).emit('new-message-to-room', saveMessage);
   }
@@ -218,7 +216,7 @@ export class ChatGateway {
     this.server.to(roomId).emit('delete-message-in-room', messId, roomId);
   }
 
-  @SubscribeMessage('send-chunk-to-server')
+  @SubscribeMessage('file-upload')
   handleChunk(
     @MessageBody()
     data: {
@@ -232,7 +230,7 @@ export class ChatGateway {
         type: string;
       };
     },
-    //@ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: Socket,
   ): void {
     const { chunk, index, totalChunks, fileName, type } = data.filePayload;
 
@@ -246,6 +244,7 @@ export class ChatGateway {
       const completeBuffer = this.concatChunks(
         this.tempChunks[fileName].chunks,
       );
+
       this.chatService.saveFile({
         data: completeBuffer,
         type: type,
@@ -253,6 +252,8 @@ export class ChatGateway {
         fileName,
       });
       delete this.tempChunks[fileName];
+
+      client.emit('upload-file-success', fileName);
     }
   }
 
