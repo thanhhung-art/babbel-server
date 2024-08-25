@@ -9,6 +9,8 @@ import { UserService } from './user/user.service';
 import { ChatService } from './chat/chat.service';
 import { AwsModule } from './aws/aws.module';
 import { AwsService } from './aws/aws.service';
+import { FileService } from './file/file.service';
+import { FileController } from './file/file.controller';
 
 @Module({
   imports: [
@@ -22,7 +24,7 @@ import { AwsService } from './aws/aws.service';
     }),
     AwsModule,
   ],
-  controllers: [],
-  providers: [ChatGateway, UserService, ChatService, AwsService],
+  controllers: [FileController],
+  providers: [ChatGateway, UserService, ChatService, AwsService, FileService],
 })
 export class AppModule {}

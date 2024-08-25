@@ -16,6 +16,11 @@ async function bootstrap() {
       'Access-Control-Allow-Credentials',
       'Access-Control-Allow-Headers',
       'Content-Type',
+      'x-file-name',
+      'x-chunk-index',
+      'x-total-chunks',
+      'x-file-type',
+      'x-file-size',
     ],
     credentials: true,
   });
