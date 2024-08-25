@@ -25,7 +25,7 @@ export class AwsService {
       const command = new PutObjectCommand(params);
       await this.s3Client.send(command);
 
-      return `https://${this.configService.get<string>('AWS_S3_BUCKET')}.s3.amazonaws.com/${fileName}`;
+      return `${this.configService.get<string>('CLOUDFRONT_URL')}/${fileName}`;
     } catch (error) {
       console.error(error);
       throw error;
