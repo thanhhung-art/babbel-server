@@ -73,27 +73,29 @@ model RoomMember {
 }
 
 model MessageInConversation {
-  id             String              @id @default(uuid())
-  conversation   Conversation        @relation(fields: [conversationId], references: [id])
+  id             String             @id @default(uuid())
+  conversation   Conversation       @relation(fields: [conversationId], references: [id])
   conversationId String
-  user           User                @relation(fields: [userId], references: [id])
+  user           User               @relation(fields: [userId], references: [id])
   userId         String
   content        String
-  createdAt      DateTime            @default(now())
-  udpateAt       DateTime            @updatedAt
-  attachments    MessageAttachment[]
+  createdAt      DateTime           @default(now())
+  udpateAt       DateTime           @updatedAt
+  attachments    MessageAttachment?
 }
 
 model MessageInRoom {
-  id                String              @id @default(uuid())
-  room              Room                @relation(fields: [roomId], references: [id])
-  roomId            String
-  user              User                @relation(fields: [userId], references: [id])
-  userId            String
-  content           String
-  createdAt         DateTime            @default(now())
-  udpateAt          DateTime            @updatedAt
-  MessageAttachment MessageAttachment[]
+  id                  String             @id @default(uuid())
+  room                Room               @relation(fields: [roomId], references: [id])
+  roomId              String
+  user                User               @relation(fields: [userId], references: [id])
+  userId              String
+  content             String
+  createdAt           DateTime           @default(now())
+  udpateAt            DateTime           @updatedAt
+  messageAttachment   MessageAttachment?
+  messageAttachmentId String?            @unique
+  files               Files[]
 }
 
 model MessageAttachment {
@@ -102,13 +104,12 @@ model MessageAttachment {
   createdAt               DateTime               @default(now())
   udpateAt                DateTime               @updatedAt
   MessageInConversation   MessageInConversation? @relation(fields: [messageInConversationId], references: [id])
-  messageInConversationId String?
+  messageInConversationId String?                @unique
   MessageInRoom           MessageInRoom?         @relation(fields: [messageInRoomId], references: [id])
-  messageInRoomId         String?
+  messageInRoomId         String?                @unique
+  files                   Files[]
   images                  images?                @relation(fields: [imagesId], references: [id])
   imagesId                String?
-  files                   files?                 @relation(fields: [fileId], references: [id])
-  fileId                  String?
   videos                  videos?                @relation(fields: [videosId], references: [id])
   videosId                String?
 }
@@ -193,16 +194,18 @@ model images {
   messageAttachment    MessageAttachment[]
 }
 
-model files {
-  id                   String              @id @default(uuid())
-  name                 String
-  type                 String
-  url                  String              @default("")
-  data                 Bytes?
-  createdAt            DateTime            @default(now())
-  udpateAt             DateTime            @updatedAt
-  messageAttcachmentId String
-  MessageAttachment    MessageAttachment[]
+model Files {
+  id                  String             @id @default(uuid())
+  name                String
+  type                String
+  url                 String             @default("")
+  data                Bytes?
+  createdAt           DateTime           @default(now())
+  udpateAt            DateTime           @updatedAt
+  messageAttachmentId String?
+  messageAttachment   MessageAttachment? @relation(fields: [messageAttachmentId], references: [id])
+  messageInRoomId     String?
+  messageInRoom       MessageInRoom?     @relation(fields: [messageInRoomId], references: [id])
 }
 
 model videos {
