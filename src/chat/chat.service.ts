@@ -92,7 +92,10 @@ export class ChatService {
 
     const message = await this.prismaService.messageInRoom.create({
       data: dataToCreate,
-      include: { files: { select: { url: true } } },
+      include: {
+        files: { select: { url: true } },
+        user: { select: { name: true } },
+      },
     });
 
     return message;
@@ -113,17 +116,19 @@ export class ChatService {
   }
 
   async deleteMessageInRoom(id: string) {
-    const attachment = await this.prismaService.messageAttachment.findFirst({
+    const files = await this.prismaService.files.findMany({
       where: { messageInRoomId: id },
     });
 
-    if (attachment) {
-      await this.prismaService.files.deleteMany({
-        where: { messageAttachmentId: attachment.id },
-      });
+    if (files && files.length > 0) {
+      await Promise.all(
+        files.map(async (file) => {
+          await this.awsService.deleteFileFromS3(file.name);
+        }),
+      );
 
-      await this.prismaService.messageAttachment.delete({
-        where: { id: attachment.id },
+      await this.prismaService.files.deleteMany({
+        where: { messageInRoomId: id },
       });
     }
 
