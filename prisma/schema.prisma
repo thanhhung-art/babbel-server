@@ -36,6 +36,18 @@ model User {
   MessageInConversation MessageInConversation[]
   MessageInRoom         MessageInRoom[]
   Chatting              Chatting[]
+  BlockedUsers          BlockUser[]             @relation(name: "BlockedUsers")
+  BlockedBy             BlockUser[]             @relation(name: "BlockedBy")
+}
+
+model BlockUser {
+  id        String   @id @default(uuid())
+  blocker   User     @relation(name: "BlockedUsers", fields: [blockerId], references: [id])
+  blockerId String
+  blocked   User     @relation(name: "BlockedBy", fields: [blockedId], references: [id])
+  blockedId String
+  createdAt DateTime @default(now())
+  udpateAt  DateTime @updatedAt
 }
 
 model Room {
