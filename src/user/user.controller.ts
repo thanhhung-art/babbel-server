@@ -20,8 +20,13 @@ export class UserController {
   }
 
   @Get('/friend-request')
-  async findFriendRequest(@Query('user_id') id: string) {
-    return await this.userService.getFriendRequest(id);
+  async findFriendRequest(@Req() req: Request) {
+    return await this.userService.getFriendRequest(req.user_id);
+  }
+
+  @Get('/request-friend')
+  async findRequestFriend(@Req() req: Request) {
+    return await this.userService.getRequestFriend(req.user_id);
   }
 
   @Get('/friends')
@@ -48,8 +53,12 @@ export class UserController {
   }
 
   @Get('/search')
-  async findByName(@Query('value') value: string) {
-    return await this.userService.findByName(value);
+  async findByName(
+    @Req() req: Request,
+    @Query('value') value: string,
+    @Query('status') status: 'friend' | 'unfriend',
+  ) {
+    return await this.userService.findByName(value, status, req.user_id);
   }
 
   @Get('/chatting')
@@ -72,10 +81,10 @@ export class UserController {
 
   @Post('/accept-friend-request')
   async acceptFriendRequest(
-    @Query('user_id') userId: string,
+    @Req() req: Request,
     @Query('friend_id') friendId: string,
   ) {
-    return await this.userService.acceptFriendRequest(userId, friendId);
+    return await this.userService.acceptFriendRequest(friendId, req.user_id);
   }
 
   @Post('/add-to-chatting')
@@ -84,6 +93,24 @@ export class UserController {
       req.user_id,
       friendId,
     );
+  }
+
+  @Post('/block/:id')
+  async blockUser(@Req() req: Request, @Param('id') friendId: string) {
+    return await this.userService.blockUser(req.user_id, friendId);
+  }
+
+  @Post('/unfriend/:id')
+  async unfriend(@Req() req: Request, @Param('id') friendId: string) {
+    return await this.userService.unfriend(req.user_id, friendId);
+  }
+
+  @Delete('/friend-request/:id')
+  async deleteFriendRequest(
+    @Param('id') friendId: string,
+    @Req() req: Request,
+  ) {
+    return await this.userService.deleteFriendRequest(friendId, req.user_id);
   }
 
   @Delete(':id')

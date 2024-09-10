@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ICreateUser } from './user.type';
 import { generateSalt, hashPassword } from 'src/utils/crypto';
@@ -66,9 +66,27 @@ export class UserService {
     });
   }
 
-  async findByName(name: string) {
+  async findByName(
+    name: string,
+    status: 'friend' | 'unfriend',
+    userId: string,
+  ) {
     return this.prismaService.user.findMany({
-      where: { name: { contains: name } },
+      where: {
+        name: { contains: name },
+        friends:
+          status === 'friend'
+            ? {
+                some: {
+                  friendId: userId,
+                },
+              }
+            : {
+                none: {
+                  friendId: userId,
+                },
+              },
+      },
       select: {
         id: true,
         email: true,
@@ -93,7 +111,7 @@ export class UserService {
     });
 
     if (existingRequest) {
-      return 'Friend request already sent';
+      return { msg: 'Friend request already sent', friendId };
     } else {
       await this.prismaService.friendRequest.create({
         data: {
@@ -101,7 +119,7 @@ export class UserService {
           friendId,
         },
       });
-      return 'Friend request sent';
+      return { msg: 'Friend request sent', friendId };
     }
   }
 
@@ -130,7 +148,35 @@ export class UserService {
     return users;
   }
 
+  async getRequestFriend(userId: string) {
+    const data = await this.prismaService.friendRequest.findMany({
+      where: { friendId: userId },
+    });
+
+    if (!data) {
+      return [];
+    }
+
+    const friendRequest = data.map((items) => items.userId);
+
+    const users = await this.prismaService.user.findMany({
+      where: {
+        id: { in: friendRequest },
+      },
+      select: {
+        id: true,
+        avatar: true,
+        name: true,
+      },
+    });
+
+    return users;
+  }
+
   async acceptFriendRequest(userId: string, friendId: string) {
+    if (!userId || !friendId) {
+      throw new BadRequestException('Invalid user id or friend id');
+    }
     const request = await this.prismaService.friendRequest.findFirst({
       where: { userId, friendId },
     });
@@ -151,7 +197,7 @@ export class UserService {
     });
 
     if (existingFriend) {
-      return 'Friend request already accepted';
+      return { msg: 'Friend request accepted' };
     }
 
     await this.prismaService.friends.create({
@@ -168,7 +214,24 @@ export class UserService {
       },
     });
 
-    return 'Friend request accepted';
+    return { msg: 'Friend request accepted' };
+  }
+
+  async deleteFriendRequest(userId: string, friendId: string) {
+    if (!userId || !friendId) {
+      throw new BadRequestException('Invalid user id or friend id');
+    }
+    const request = await this.prismaService.friendRequest.findFirst({
+      where: { userId, friendId },
+    });
+
+    await this.prismaService.friendRequest.delete({
+      where: {
+        id: request.id,
+      },
+    });
+
+    return { msg: 'Friend request deleted' };
   }
 
   async getFriends(userId: string) {
@@ -456,5 +519,45 @@ export class UserService {
     }
 
     return result;
+  }
+
+  async blockUser(userId: string, friendId: string) {
+    const existingBlock = await this.prismaService.blockUser.findFirst({
+      where: {
+        blockerId: userId,
+        blockedId: friendId,
+      },
+    });
+
+    if (existingBlock) {
+      return { msg: 'User already blocked' };
+    }
+
+    await this.prismaService.blockUser.create({
+      data: {
+        blockerId: userId,
+        blockedId: friendId,
+      },
+    });
+
+    return { msg: 'User blocked' };
+  }
+
+  async unfriend(userId: string, friendId: string) {
+    await this.prismaService.friends.deleteMany({
+      where: {
+        userId,
+        friendId,
+      },
+    });
+
+    await this.prismaService.friends.deleteMany({
+      where: {
+        userId: friendId,
+        friendId: userId,
+      },
+    });
+
+    return { msg: 'User unfriended' };
   }
 }
