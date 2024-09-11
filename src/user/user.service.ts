@@ -1,563 +1,125 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ICreateUser } from './user.type';
-import { generateSalt, hashPassword } from 'src/utils/crypto';
+import { UserActionService } from './services/user.action.service';
+import { UserFriendService } from './services/user.friend.service';
+import { UserConversationService } from './services/user.conversation.service';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly userActionService: UserActionService,
+    private readonly userFriendService: UserFriendService,
+    private readonly userConversationService: UserConversationService,
+  ) {}
 
-  async create(data: ICreateUser) {
-    const saltToHash = generateSalt(16);
-    const { hashedPassword, salt } = hashPassword(data.password, saltToHash);
-
-    return this.prismaService.user.create({
-      data: {
-        ...data,
-        password: hashedPassword,
-        salt,
-      },
-    });
+  create(data: ICreateUser) {
+    return this.userActionService.create(data);
   }
 
-  async findAll() {
-    return this.prismaService.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        avatar: true,
-        createdAt: true,
-        updateAt: true,
-      },
-    });
+  findAll() {
+    return this.userActionService.findAll();
   }
 
-  async findOne(email: string) {
-    return this.prismaService.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        avatar: true,
-        createdAt: true,
-        updateAt: true,
-      },
-    });
+  findOne(email: string) {
+    return this.userActionService.findOne(email);
   }
 
-  async findByEmail(email: string) {
-    return this.prismaService.user.findUnique({
-      where: { email },
-    });
+  findByEmail(email: string) {
+    return this.userActionService.findByEmail(email);
   }
 
-  async findById(id: string) {
-    return this.prismaService.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        email: true,
-        avatar: true,
-        createdAt: true,
-        updateAt: true,
-        name: true,
-        FriendRequest: true,
-      },
-    });
+  findById(id: string) {
+    return this.userActionService.findById(id);
   }
 
-  async findByName(
-    name: string,
-    status: 'friend' | 'unfriend',
-    userId: string,
-  ) {
-    return this.prismaService.user.findMany({
-      where: {
-        name: { contains: name },
-        friends:
-          status === 'friend'
-            ? {
-                some: {
-                  friendId: userId,
-                },
-              }
-            : {
-                none: {
-                  friendId: userId,
-                },
-              },
-      },
-      select: {
-        id: true,
-        email: true,
-        avatar: true,
-        createdAt: true,
-        updateAt: true,
-        name: true,
-      },
-    });
+  findByName(name: string, status: 'friend' | 'unfriend', userId: string) {
+    return this.userActionService.findByName(name, status, userId);
   }
 
-  async delete(id: string) {
-    return this.prismaService.user.delete({ where: { id } });
+  delete(id: string) {
+    return this.userActionService.delete(id);
   }
 
-  async sendFriendRequest(userId: string, friendId: string) {
-    const existingRequest = await this.prismaService.friendRequest.findFirst({
-      where: {
-        userId,
-        friendId,
-      },
-    });
-
-    if (existingRequest) {
-      return { msg: 'Friend request already sent', friendId };
-    } else {
-      await this.prismaService.friendRequest.create({
-        data: {
-          userId,
-          friendId,
-        },
-      });
-      return { msg: 'Friend request sent', friendId };
-    }
+  sendFriendRequest(userId: string, friendId: string) {
+    return this.userFriendService.sendFriendRequest(userId, friendId);
   }
 
-  async getFriendRequest(userId: string) {
-    const data = await this.prismaService.friendRequest.findMany({
-      where: { userId },
-    });
-
-    if (!data) {
-      return [];
-    }
-
-    const friendRequest = data.map((items) => items.friendId);
-
-    const users = await this.prismaService.user.findMany({
-      where: {
-        id: { in: friendRequest },
-      },
-      select: {
-        id: true,
-        avatar: true,
-        name: true,
-      },
-    });
-
-    return users;
+  getFriendRequest(userId: string) {
+    return this.userFriendService.getFriendRequest(userId);
   }
 
-  async getRequestFriend(userId: string) {
-    const data = await this.prismaService.friendRequest.findMany({
-      where: { friendId: userId },
-    });
-
-    if (!data) {
-      return [];
-    }
-
-    const friendRequest = data.map((items) => items.userId);
-
-    const users = await this.prismaService.user.findMany({
-      where: {
-        id: { in: friendRequest },
-      },
-      select: {
-        id: true,
-        avatar: true,
-        name: true,
-      },
-    });
-
-    return users;
+  getRequestFriend(userId: string) {
+    return this.userFriendService.getRequestFriend(userId);
   }
 
-  async acceptFriendRequest(userId: string, friendId: string) {
-    if (!userId || !friendId) {
-      throw new BadRequestException('Invalid user id or friend id');
-    }
-    const request = await this.prismaService.friendRequest.findFirst({
-      where: { userId, friendId },
-    });
-
-    if (request) {
-      await this.prismaService.friendRequest.delete({
-        where: {
-          id: request.id,
-        },
-      });
-    }
-
-    const existingFriend = await this.prismaService.friends.findFirst({
-      where: {
-        userId,
-        friendId,
-      },
-    });
-
-    if (existingFriend) {
-      return { msg: 'Friend request accepted' };
-    }
-
-    await this.prismaService.friends.create({
-      data: {
-        userId,
-        friendId,
-      },
-    });
-
-    await this.prismaService.friends.create({
-      data: {
-        userId: friendId,
-        friendId: userId,
-      },
-    });
-
-    return { msg: 'Friend request accepted' };
+  acceptFriendRequest(userId: string, friendId: string) {
+    return this.userFriendService.acceptFriendRequest(userId, friendId);
   }
 
-  async deleteFriendRequest(userId: string, friendId: string) {
-    if (!userId || !friendId) {
-      throw new BadRequestException('Invalid user id or friend id');
-    }
-    const request = await this.prismaService.friendRequest.findFirst({
-      where: { userId, friendId },
-    });
-
-    await this.prismaService.friendRequest.delete({
-      where: {
-        id: request.id,
-      },
-    });
-
-    return { msg: 'Friend request deleted' };
+  deleteFriendRequest(userId: string, friendId: string) {
+    return this.userFriendService.deleteFriendRequest(userId, friendId);
   }
 
-  async getFriends(userId: string) {
-    const data = await this.prismaService.friends.findMany({
-      where: { userId },
-    });
-
-    if (!data) {
-      return [];
-    }
-
-    const friends = data.map((items) => items.friendId);
-
-    const users = await this.prismaService.user.findMany({
-      where: {
-        id: { in: friends },
-      },
-      select: {
-        id: true,
-        email: true,
-        avatar: true,
-        name: true,
-      },
-    });
-
-    return users;
+  getFriends(userId: string) {
+    return this.userFriendService.getFriends(userId);
   }
 
-  async getConversation(userId: string, friendId: string) {
-    const existingConversation =
-      await this.prismaService.conversation.findFirst({
-        where: {
-          participants: {
-            some: { id: userId },
-          },
-        },
-        include: {
-          participants: {
-            where: {
-              id: friendId,
-            },
-            select: {
-              id: true,
-              email: true,
-              avatar: true,
-              name: true,
-            },
-          },
-        },
-      });
-
-    if (existingConversation) {
-      return existingConversation;
-    }
-
-    const conversation = await this.prismaService.conversation.create({
-      data: {
-        participants: {
-          connect: [{ id: userId }, { id: friendId }],
-        },
-      },
-      include: {
-        participants: {
-          where: {
-            id: friendId,
-          },
-          select: {
-            id: true,
-            email: true,
-            avatar: true,
-            name: true,
-          },
-        },
-      },
-    });
-
-    return conversation;
+  getConversation(userId: string, friendId: string) {
+    return this.userConversationService.getConversation(userId, friendId);
   }
 
-  async getConversations(userId: string) {
-    const conversations = await this.prismaService.conversation.findMany({
-      where: {
-        participants: {
-          some: {
-            id: userId,
-          },
-        },
-      },
-      include: {
-        participants: {
-          where: {
-            NOT: {
-              id: userId,
-            },
-          },
-          select: {
-            id: true,
-            email: true,
-            avatar: true,
-            name: true,
-          },
-        },
-      },
-    });
-
-    if (!conversations) {
-      return [];
-    }
-
-    return conversations;
+  getConversations(userId: string) {
+    return this.userConversationService.getConversations(userId);
   }
 
-  async getConversationMessages(conversationId: string) {
-    const result = await this.prismaService.messageInConversation.findMany({
-      where: {
-        conversationId,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            avatar: true,
-            name: true,
-          },
-        },
-        files: {
-          select: {
-            id: true,
-            url: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'asc' },
-    });
-
-    if (!result) {
-      return [];
-    }
-
-    return result;
+  getConversationMessages(conversationId: string) {
+    return this.userConversationService.getConversationMessages(conversationId);
   }
 
-  async getFriendsOnline(
+  getFriendsOnline(
     userId: string,
   ): Promise<{ id: string; socketId: string }[]> {
-    const friends = await this.prismaService.friends.findMany({
-      where: {
-        userId,
-      },
-    });
-
-    const onlineFriends: { id: string; socketId: string }[] = [];
-    for (const friend of friends) {
-      const friendSocket = await this.prismaService.userOnline.findFirst({
-        where: {
-          userId: friend.friendId,
-        },
-      });
-
-      if (friendSocket) {
-        onlineFriends.push({
-          id: friend.friendId,
-          socketId: friendSocket.socketId,
-        });
-      }
-    }
-
-    return onlineFriends;
+    return this.userActionService.getFriendsOnline(userId);
   }
 
-  async getUserSocketId(userId: string) {
-    const userOnline = await this.prismaService.userOnline.findFirst({
-      where: {
-        userId,
-      },
-    });
-
-    if (!userOnline) {
-      return null;
-    }
-
-    return userOnline.socketId;
+  getUserSocketId(userId: string) {
+    return this.userActionService.getUserSocketId(userId);
   }
 
-  async createUserOnline(userId: string, socketId: string) {
-    if (!userId) {
-      return;
-    }
-    // remove when develop success
-    if (await this.prismaService.userOnline.findFirst({ where: { userId } })) {
-      await this.prismaService.userOnline.update({
-        where: {
-          userId,
-        },
-        data: {
-          socketId,
-        },
-      });
-      return;
-    }
-    return await this.prismaService.userOnline.create({
-      data: {
-        userId,
-        socketId,
-      },
-    });
+  createUserOnline(userId: string, socketId: string) {
+    return this.userActionService.createUserOnline(userId, socketId);
   }
 
-  async deleteUserOnline(userId: string) {
-    return await this.prismaService.userOnline.delete({
-      where: {
-        userId,
-      },
-    });
+  deleteUserOnline(userId: string) {
+    return this.userActionService.deleteUserOnline(userId);
   }
 
-  async addConversationToChatting(userId: string, friendId: string) {
-    const existingConversation = await this.getConversation(userId, friendId);
-
-    const existingChatting = await this.prismaService.chatting.findFirst({
-      where: {
-        userId,
-        conversationId: existingConversation.id,
-      },
-    });
-
-    if (existingChatting) {
-      return existingChatting;
-    }
-
-    return await this.prismaService.chatting.create({
-      data: {
-        userId,
-        conversationId: existingConversation.id,
-      },
-    });
+  addConversationToChatting(userId: string, friendId: string) {
+    return this.userConversationService.addConversationToChatting(
+      userId,
+      friendId,
+    );
   }
 
-  async removeConversationFromChatting(id: string) {
-    return await this.prismaService.chatting.delete({
-      where: {
-        id,
-      },
-    });
+  removeConversationFromChatting(id: string) {
+    return this.userConversationService.removeConversationFromChatting(id);
   }
 
-  async getChattingConversations(userId: string) {
-    const result = await this.prismaService.chatting.findMany({
-      where: {
-        userId,
-      },
-      include: {
-        conversation: {
-          include: {
-            participants: {
-              where: {
-                NOT: {
-                  id: userId,
-                },
-              },
-              select: {
-                id: true,
-                email: true,
-                avatar: true,
-                name: true,
-              },
-            },
-          },
-        },
-        room: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-            createdAt: true,
-            updateAt: true,
-          },
-        },
-      },
-    });
-
-    if (!result) {
-      return [];
-    }
-
-    return result;
+  getChattingConversations(userId: string) {
+    return this.userConversationService.getChattingConversations(userId);
   }
 
-  async blockUser(userId: string, friendId: string) {
-    const existingBlock = await this.prismaService.blockUser.findFirst({
-      where: {
-        blockerId: userId,
-        blockedId: friendId,
-      },
-    });
-
-    if (existingBlock) {
-      return { msg: 'User already blocked' };
-    }
-
-    await this.prismaService.blockUser.create({
-      data: {
-        blockerId: userId,
-        blockedId: friendId,
-      },
-    });
-
-    return { msg: 'User blocked' };
+  blockUser(userId: string, friendId: string) {
+    return this.userActionService.blockUser(userId, friendId);
   }
 
-  async unfriend(userId: string, friendId: string) {
-    await this.prismaService.friends.deleteMany({
-      where: {
-        userId,
-        friendId,
-      },
-    });
+  getBlockedUsers(userId: string) {
+    return this.userActionService.getBlockedUsers(userId);
+  }
 
-    await this.prismaService.friends.deleteMany({
-      where: {
-        userId: friendId,
-        friendId: userId,
-      },
-    });
-
-    return { msg: 'User unfriended' };
+  unfriend(userId: string, friendId: string) {
+    return this.userActionService.unfriend(userId, friendId);
   }
 }

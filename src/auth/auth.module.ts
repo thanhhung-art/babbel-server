@@ -2,15 +2,16 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
-import { UserService } from 'src/user/user.service';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthMiddleware } from './auth.middleware';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
-  providers: [AuthService, UserService, JwtService],
+  providers: [AuthService, JwtService],
   controllers: [AuthController],
   imports: [
+    UserModule,
     PrismaModule,
     ConfigModule.forRoot(),
     JwtModule.registerAsync({
