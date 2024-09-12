@@ -1,4 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable } from '@nestjs/common';
+import { Cache } from 'cache-manager';
 import { AwsService } from 'src/aws/aws.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -7,6 +9,7 @@ export class ChatService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly awsService: AwsService,
+    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
   ) {}
 
   async createMessage(data: {
@@ -177,5 +180,27 @@ export class ChatService {
     return await this.prismaService.messageAttachment.findFirst({
       where: { id },
     });
+  }
+
+  async checkIfFriendBlocked(userId: string, friendId: string) {
+    const cachedValue = await this.cacheService.get(`${userId}-${friendId}`);
+
+    if (cachedValue) {
+      return cachedValue;
+    }
+
+    const blockedUser = await this.prismaService.blockUser.findFirst({
+      where: {
+        blockerId: userId,
+        blockedId: friendId,
+      },
+    });
+
+    await this.cacheService.set(
+      `${userId}-${friendId}`,
+      blockedUser ? true : false,
+    );
+
+    return blockedUser ? true : false;
   }
 }

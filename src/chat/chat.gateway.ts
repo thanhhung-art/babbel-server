@@ -78,10 +78,14 @@ export class ChatGateway {
       friendId: string;
       urls: string[];
     },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
     const userId = client.handshake.query.userId as string;
+
+    if (this.chatService.checkIfFriendBlocked(friendId, userId)) {
+      return;
+    }
+
     const dataToCreateMessage: ICreateMessageInConversation = {
       content,
       userId,
@@ -107,9 +111,12 @@ export class ChatGateway {
       friendId,
       isTyping,
     }: { conversationId: string; friendId: string; isTyping: boolean },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
+    const userId = client.handshake.query.userId as string;
+    if (this.chatService.checkIfFriendBlocked(friendId, userId)) {
+      return;
+    }
     const friendSocket = await this.userService.getUserSocketId(friendId);
 
     if (friendSocket) {
