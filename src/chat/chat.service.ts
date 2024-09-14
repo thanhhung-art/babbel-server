@@ -155,8 +155,6 @@ export class ChatService {
         data.type,
       );
 
-      console.log(fileUploaded);
-
       return await this.prismaService.files.create({
         data: {
           name: data.fileName,
