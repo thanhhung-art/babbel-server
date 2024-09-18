@@ -113,6 +113,13 @@ export class UserController {
     return await this.userService.deleteFriendRequest(friendId, req.user_id);
   }
 
+  @Delete('/chatting/:id')
+  async deleteChatting(@Param('id') conversationId: string) {
+    return await this.userService.removeConversationFromChatting(
+      conversationId,
+    );
+  }
+
   @Delete(':id')
   async delete(@Param('id') id: string) {
     return await this.userService.delete(id);

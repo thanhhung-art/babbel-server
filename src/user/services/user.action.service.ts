@@ -198,6 +198,17 @@ export class UserActionService {
     return { msg: 'User blocked' };
   }
 
+  async unBlockUser(userId: string, friendId: string) {
+    await this.prismaService.blockUser.deleteMany({
+      where: {
+        blockerId: userId,
+        blockedId: friendId,
+      },
+    });
+
+    return { msg: 'User unblocked' };
+  }
+
   async getBlockedUsers(userId: string) {
     const data = await this.prismaService.blockUser.findMany({
       where: { blockerId: userId },

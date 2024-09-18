@@ -115,6 +115,10 @@ export class UserService {
     return this.userActionService.blockUser(userId, friendId);
   }
 
+  unblockUser(userId: string, friendId: string) {
+    return this.userActionService.unBlockUser(userId, friendId);
+  }
+
   getBlockedUsers(userId: string) {
     return this.userActionService.getBlockedUsers(userId);
   }
