@@ -9,9 +9,18 @@ export class UserConversationService {
     const existingConversation =
       await this.prismaService.conversation.findFirst({
         where: {
-          participants: {
-            some: { id: userId },
-          },
+          AND: [
+            {
+              participants: {
+                some: { id: userId },
+              },
+            },
+            {
+              participants: {
+                some: { id: friendId },
+              },
+            },
+          ],
         },
         include: {
           participants: {
@@ -29,6 +38,8 @@ export class UserConversationService {
       });
 
     if (existingConversation) {
+      await this.addConversationToChatting(userId, existingConversation.id);
+      await this.addConversationToChatting(friendId, existingConversation.id);
       return existingConversation;
     }
 
@@ -52,6 +63,9 @@ export class UserConversationService {
         },
       },
     });
+
+    await this.addConversationToChatting(userId, conversation.id);
+    await this.addConversationToChatting(friendId, conversation.id);
 
     return conversation;
   }
@@ -120,13 +134,11 @@ export class UserConversationService {
     return result;
   }
 
-  async addConversationToChatting(userId: string, friendId: string) {
-    const existingConversation = await this.getConversation(userId, friendId);
-
+  async addConversationToChatting(userId: string, conversationId: string) {
     const existingChatting = await this.prismaService.chatting.findFirst({
       where: {
         userId,
-        conversationId: existingConversation.id,
+        conversationId,
       },
     });
 
@@ -137,7 +149,7 @@ export class UserConversationService {
     return await this.prismaService.chatting.create({
       data: {
         userId,
-        conversationId: existingConversation.id,
+        conversationId,
       },
     });
   }
