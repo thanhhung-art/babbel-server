@@ -13,6 +13,8 @@ import { FileService } from './file/file.service';
 import { FileController } from './file/file.controller';
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { CustomCacheInterceptor } from './cache/CustomCacheInterceptor';
 
 @Module({
   imports: [
@@ -32,10 +34,21 @@ import * as redisStore from 'cache-manager-redis-store';
         store: redisStore,
         host: configService.get('REDIS_HOST'),
         port: configService.get('REDIS_PORT'),
+        ttl: 5,
       }),
     }),
   ],
   controllers: [FileController],
-  providers: [ChatGateway, UserService, ChatService, AwsService, FileService],
+  providers: [
+    ChatGateway,
+    UserService,
+    ChatService,
+    AwsService,
+    FileService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CustomCacheInterceptor,
+    },
+  ],
 })
 export class AppModule {}
