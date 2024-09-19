@@ -10,7 +10,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { LoginDto, RegisterDto, UserDto } from './auth.dto';
 import { Response } from 'express';
 import { Request } from 'src/types';
 import { UserService } from 'src/user/user.service';
@@ -55,7 +55,7 @@ export class AuthController {
       throw new UnauthorizedException('No token found');
     }
 
-    let user: unknown;
+    let user: UserDto;
     if (req.user_id) {
       user = await this.userService.findById(req.user_id);
     } else {

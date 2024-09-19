@@ -25,3 +25,19 @@ export class RegisterDto {
   @IsNotEmpty()
   name: string;
 }
+
+export class UserDto {
+  email: string;
+  name: string;
+  id: string;
+  avatar: string;
+  createdAt: Date;
+  updateAt: Date;
+  FriendRequest: {
+    id: string;
+    userId: string;
+    friendId: string;
+    createdAt: Date;
+    udpateAt: Date;
+  }[];
+}
