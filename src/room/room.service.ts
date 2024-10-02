@@ -48,9 +48,17 @@ export class RoomService {
     });
   }
 
-  async findByName(name: string) {
+  async findByName(
+    name: string,
+    status: 'joined' | 'unjoined',
+    userId: string,
+  ) {
     return await this.prismaService.room.findMany({
-      where: { name: { contains: name } },
+      where: {
+        name: { contains: name },
+        members:
+          status === 'joined' ? { some: { userId } } : { none: { userId } },
+      },
       select: {
         id: true,
         name: true,
@@ -74,6 +82,24 @@ export class RoomService {
     return messages;
   }
 
+  async getMembersByRoomId(roomId: string) {
+    return await this.prismaService.roomMember.findMany({
+      where: { roomId },
+      include: {
+        user: { select: { name: true, avatar: true } },
+      },
+    });
+  }
+
+  async getJoinRequestsByRoomId(roomId: string) {
+    return await this.prismaService.joinRequest.findMany({
+      where: { roomId },
+      include: {
+        user: { select: { name: true, avatar: true } },
+      },
+    });
+  }
+
   async addToChatting(userId: string, roomId: string) {
     const existingChatting = await this.prismaService.chatting.findFirst({
       where: {
@@ -83,7 +109,7 @@ export class RoomService {
     });
 
     if (existingChatting) {
-      return 'Already added to chatting';
+      return { msg: 'Already added' };
     }
 
     return await this.prismaService.chatting.create({
@@ -100,15 +126,23 @@ export class RoomService {
     });
 
     if (existingRoomMember) {
-      return 'Already joined';
+      return { msg: 'Already joined' };
     }
 
     const existingJoinRequest = await this.prismaService.joinRequest.findFirst({
-      where: { userId, roomId },
+      where: { id: userId, roomId },
     });
 
     if (existingJoinRequest) {
-      return 'Already requested';
+      return { msg: 'Already requested' };
+    }
+
+    const existingBannedUser = await this.prismaService.bannedUser.findFirst({
+      where: { userId, roomId },
+    });
+
+    if (existingBannedUser) {
+      return { msg: 'You are banned' };
     }
 
     return await this.prismaService.joinRequest.create({
@@ -117,6 +151,98 @@ export class RoomService {
         roomId,
       },
     });
+  }
+
+  async acceptJoinRequest(userId: string, roomId: string) {
+    const existingJoinRequest = await this.prismaService.joinRequest.findFirst({
+      where: { userId, roomId },
+    });
+
+    if (!existingJoinRequest) {
+      return { msg: 'No request found' };
+    }
+
+    await this.prismaService.roomMember.create({
+      data: {
+        userId,
+        roomId,
+        role: 'MEMBER',
+      },
+    });
+
+    await this.prismaService.chatting.create({
+      data: {
+        userId,
+        roomId,
+      },
+    });
+
+    await this.prismaService.joinRequest.delete({
+      where: { id: existingJoinRequest.id },
+    });
+
+    return { msg: 'Request accepted' };
+  }
+
+  async rejectJoinRequest(userId: string, roomId: string) {
+    const existingJoinRequest = await this.prismaService.joinRequest.findFirst({
+      where: { userId, roomId },
+    });
+
+    if (!existingJoinRequest) {
+      return { msg: 'No request found' };
+    }
+
+    await this.prismaService.joinRequest.delete({
+      where: { id: existingJoinRequest.id },
+    });
+
+    return { msg: 'Request rejected' };
+  }
+
+  async kickUser(userId: string, roomId: string) {
+    await this.prismaService.chatting.deleteMany({
+      where: { userId, roomId },
+    });
+
+    return await this.prismaService.roomMember.deleteMany({
+      where: { userId, roomId },
+    });
+  }
+
+  async banUser(userId: string, roomId: string) {
+    await this.prismaService.chatting.deleteMany({
+      where: { userId, roomId },
+    });
+
+    await this.prismaService.roomMember.deleteMany({
+      where: { userId, roomId },
+    });
+
+    await this.prismaService.bannedUser.create({
+      data: {
+        userId,
+        roomId,
+      },
+    });
+
+    return { msg: 'User banned' };
+  }
+
+  async getBannedUsersByRoomId(roomId: string) {
+    return await this.prismaService.bannedUser.findMany({
+      where: { roomId },
+      include: {
+        user: { select: { name: true, avatar: true } },
+      },
+    });
+  }
+
+  async unbanUser(userId: string, roomId: string) {
+    await this.prismaService.bannedUser.deleteMany({
+      where: { userId, roomId },
+    });
+    return { msg: 'User unbanned' };
   }
 
   async deleteRoom(id: string) {

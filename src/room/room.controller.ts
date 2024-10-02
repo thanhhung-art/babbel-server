@@ -11,14 +11,28 @@ import {
 } from '@nestjs/common';
 import { RoomService } from './room.service';
 import { Request } from 'src/types';
+import {
+  AcceptRequestDto,
+  BanUserDto,
+  KickUserDto,
+  RejectRequestDto,
+} from './room.dto';
+import { CacheService } from 'src/cache/cache.service';
 
 @Controller('room')
 export class RoomController {
-  constructor(@Inject() private readonly roomService: RoomService) {}
+  constructor(
+    @Inject() private readonly roomService: RoomService,
+    private readonly cacheService: CacheService,
+  ) {}
 
   @Get('/search')
-  async findOneByName(@Query('value') value: string) {
-    return await this.roomService.findByName(value);
+  async findOneByName(
+    @Req() req: Request,
+    @Query('value') value: string,
+    @Query('status') status: 'joined' | 'unjoined',
+  ) {
+    return await this.roomService.findByName(value, status, req.user_id);
   }
 
   @Get('/joined')
@@ -31,6 +45,28 @@ export class RoomController {
     return await this.roomService.getMessagesByRoomId(roomId);
   }
 
+  @Get('/members/:id')
+  async getRoomMembers(@Param('id') roomId: string) {
+    return await this.roomService.getMembersByRoomId(roomId);
+  }
+
+  @Get('/join-request/:id')
+  async getJoinRequest(@Param('id') roomId: string) {
+    const result = await this.roomService.getJoinRequestsByRoomId(roomId);
+    console.log(result);
+    return result;
+  }
+
+  @Get('/banned/:id')
+  async getBannedUsers(@Param('id') roomId: string) {
+    return await this.roomService.getBannedUsersByRoomId(roomId);
+  }
+
+  @Get(':id')
+  async getRoomById(@Param('id') id: string) {
+    return await this.roomService.findOneById(id);
+  }
+
   @Post('/add-to-chatting')
   async addToChatting(@Req() req: Request, @Query('id') roomId: string) {
     return await this.roomService.addToChatting(req.user_id, roomId);
@@ -38,7 +74,41 @@ export class RoomController {
 
   @Post('/join/:id')
   async joinRoom(@Req() req: Request, @Param('id') roomId: string) {
-    return await this.roomService.requestJoinRoom(req.user_id, roomId);
+    await this.roomService.requestJoinRoom(req.user_id, roomId);
+    await this.cacheService
+      .clearCacheByKey(`cache_/api/room/join-request/${roomId}_user_ef8f1287-1199-4c82-b915-b529039f46e9
+`);
+    return { message: 'Request sent', roomId };
+  }
+
+  @Post('/accept-join-request')
+  async acceptJoinRequest(@Body() data: AcceptRequestDto) {
+    await this.roomService.acceptJoinRequest(data.userId, data.roomId);
+    return { message: 'Request accepted' };
+  }
+
+  @Post('/reject-join-request')
+  async rejectJoinRequest(@Body() data: RejectRequestDto) {
+    await this.roomService.rejectJoinRequest(data.userId, data.roomId);
+    return { message: 'Request rejected' };
+  }
+
+  @Post('/kick')
+  async kickUser(@Body() data: KickUserDto) {
+    await this.roomService.kickUser(data.userId, data.roomId);
+    return { message: 'User kicked' };
+  }
+
+  @Post('/ban')
+  async banUser(@Body() data: BanUserDto) {
+    await this.roomService.banUser(data.userId, data.roomId);
+    return { message: 'User banned' };
+  }
+
+  @Post('/unban')
+  async unbanUser(@Body() data: BanUserDto) {
+    await this.roomService.unbanUser(data.userId, data.roomId);
+    return { message: 'User unbanned' };
   }
 
   @Post()
