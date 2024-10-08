@@ -27,17 +27,8 @@ export class RegisterDto {
 }
 
 export class UserDto {
+  id: string;
   email: string;
   name: string;
-  id: string;
-  avatar: string;
-  createdAt: Date;
-  updateAt: Date;
-  FriendRequest: {
-    id: string;
-    userId: string;
-    friendId: string;
-    createdAt: Date;
-    udpateAt: Date;
-  }[];
+  avatar?: string;
 }

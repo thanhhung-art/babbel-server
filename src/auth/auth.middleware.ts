@@ -14,7 +14,7 @@ export class AuthMiddleware implements NestMiddleware {
 
   async use(req: Request, res: Response, next: NextFunction) {
     const token = await this.authService.verifyToken(req.cookies['authtoken']);
-    if (token.sub && token.iat && token.exp) {
+    if (token && token.sub && token.iat && token.exp) {
       req.user_id = token.sub;
       next();
     } else {

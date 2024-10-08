@@ -49,11 +49,23 @@ export class AuthService {
 
     const token = await this.jwtService.signAsync(
       { sub: user.id },
-      { secret: this.configService.get<string>('JWT_SECRET'), expiresIn: '1d' },
+      {
+        secret: this.configService.get<string>('JWT_SECRET'),
+        expiresIn: '10m',
+      },
+    );
+
+    const refreshToken = await this.jwtService.signAsync(
+      { sub: user.id },
+      {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+        expiresIn: '7d',
+      },
     );
     return {
       user: userWithoutPassword,
       token,
+      refreshToken,
     };
   }
 
@@ -71,16 +83,43 @@ export class AuthService {
 
   async verifyToken(token: string) {
     try {
-      const decoded = await this.jwtService.verifyAsync(token, {
+      const decoded = await this.jwtService.verifyAsync<{
+        sub: string;
+        iat: number;
+        exp: number;
+      }>(token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
       return decoded;
     } catch (error) {
-      throw new UnauthorizedException('Invalid token');
+      return null;
     }
   }
 
   async logout() {
     return { message: 'Logout success' };
+  }
+
+  async refresh(token: string) {
+    try {
+      const decoded = await this.jwtService.verifyAsync<{
+        sub: string;
+        iat: number;
+        exp: number;
+      }>(token, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
+
+      const newToken = await this.jwtService.signAsync(
+        { sub: decoded.sub },
+        {
+          secret: this.configService.get<string>('JWT_SECRET'),
+          expiresIn: '10m',
+        },
+      );
+      return { newToken, userId: decoded.sub };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 }

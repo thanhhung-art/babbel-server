@@ -32,7 +32,7 @@ export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware)
-      .exclude('/auth/login', '/auth/signup')
+      .exclude('/auth/login', '/auth/signup', '/auth/refresh', '/auth/user')
       .forRoutes('*');
   }
 }
