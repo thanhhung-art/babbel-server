@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -155,6 +155,20 @@ export class UserConversationService {
   }
 
   async removeConversationFromChatting(id: string) {
+    if (!id) {
+      return { msg: 'Invalid id' };
+    }
+
+    const obj = await this.prismaService.chatting.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!obj) {
+      throw new HttpException('Not found', 404);
+    }
+
     return await this.prismaService.chatting.delete({
       where: {
         id,

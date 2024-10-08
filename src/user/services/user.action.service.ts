@@ -1,11 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ICreateUser } from '../user.type';
 import { generateSalt, hashPassword } from 'src/utils/crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { UserConversationService } from './user.conversation.service';
 
 @Injectable()
 export class UserActionService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly userConversationService: UserConversationService,
+    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
+  ) {}
 
   async create(data: ICreateUser) {
     const saltToHash = generateSalt(16);
@@ -199,6 +206,7 @@ export class UserActionService {
   }
 
   async unBlockUser(userId: string, friendId: string) {
+    await this.cacheService.del(`${userId}-block-${friendId}`);
     await this.prismaService.blockUser.deleteMany({
       where: {
         blockerId: userId,
@@ -236,6 +244,25 @@ export class UserActionService {
   }
 
   async unfriend(userId: string, friendId: string) {
+    const conversation = await this.userConversationService.getConversation(
+      userId,
+      friendId,
+    );
+
+    await this.prismaService.chatting.deleteMany({
+      where: {
+        userId,
+        conversationId: conversation.id,
+      },
+    });
+
+    await this.prismaService.chatting.deleteMany({
+      where: {
+        userId: friendId,
+        conversationId: conversation.id,
+      },
+    });
+
     await this.prismaService.friends.deleteMany({
       where: {
         userId,
@@ -251,5 +278,13 @@ export class UserActionService {
     });
 
     return { msg: 'User unfriended' };
+  }
+
+  async checkRoomAdmin(userId: string, roomId: string) {
+    const result = await this.prismaService.roomAdmin.findFirst({
+      where: { userId, roomId },
+    });
+
+    return !!result;
   }
 }

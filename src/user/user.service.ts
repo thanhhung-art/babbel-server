@@ -126,4 +126,8 @@ export class UserService {
   unfriend(userId: string, friendId: string) {
     return this.userActionService.unfriend(userId, friendId);
   }
+
+  checkRoomAdmin(userId: string, roomId: string) {
+    return this.userActionService.checkRoomAdmin(userId, roomId);
+  }
 }

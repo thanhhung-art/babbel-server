@@ -66,6 +66,12 @@ export class UserController {
     return await this.userService.getChattingConversations(req.user_id);
   }
 
+  @Get('/check-admin/:roomid')
+  async checkAdmin(@Req() req: Request, @Param('roomid') roomId: string) {
+    const result = await this.userService.checkRoomAdmin(req.user_id, roomId);
+    return { isAdmin: result };
+  }
+
   @Get(':email')
   async findOne(@Param('email') id: string) {
     return await this.userService.findOne(id);
