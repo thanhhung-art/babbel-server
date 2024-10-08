@@ -81,8 +81,12 @@ export class ChatGateway {
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
     const userId = client.handshake.query.userId as string;
+    const isBlocked = await this.chatService.checkIfFriendBlocked(
+      friendId,
+      userId,
+    );
 
-    if (this.chatService.checkIfFriendBlocked(friendId, userId)) {
+    if (isBlocked) {
       return;
     }
 
@@ -114,7 +118,11 @@ export class ChatGateway {
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
     const userId = client.handshake.query.userId as string;
-    if (this.chatService.checkIfFriendBlocked(friendId, userId)) {
+    const isBlocked = await this.chatService.checkIfFriendBlocked(
+      friendId,
+      userId,
+    );
+    if (isBlocked) {
       return;
     }
     const friendSocket = await this.userService.getUserSocketId(friendId);

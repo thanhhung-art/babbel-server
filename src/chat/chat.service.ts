@@ -36,7 +36,10 @@ export class ChatService {
 
     return await this.prismaService.messageInConversation.create({
       data: dataToCreate,
-      include: { files: { select: { url: true } } },
+      include: {
+        files: { select: { url: true } },
+        user: { select: { name: true, avatar: true } },
+      },
     });
   }
 
@@ -181,7 +184,9 @@ export class ChatService {
   }
 
   async checkIfFriendBlocked(userId: string, friendId: string) {
-    const cachedValue = await this.cacheService.get(`${userId}-${friendId}`);
+    const cachedValue = await this.cacheService.get<boolean>(
+      `${userId}-block-${friendId}`,
+    );
 
     if (cachedValue) {
       return cachedValue;
@@ -195,7 +200,7 @@ export class ChatService {
     });
 
     await this.cacheService.set(
-      `${userId}-${friendId}`,
+      `${userId}-block-${friendId}`,
       blockedUser ? true : false,
     );
 
