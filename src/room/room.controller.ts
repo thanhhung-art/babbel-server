@@ -62,6 +62,12 @@ export class RoomController {
     return await this.roomService.getBannedUsersByRoomId(roomId);
   }
 
+  @Get('/check-admin/:id')
+  async checkAdmin(@Req() req: Request, @Param('id') roomId: string) {
+    const result = await this.roomService.checkRoomAdmin(req.user_id, roomId);
+    return { isAdmin: result };
+  }
+
   @Get(':id')
   async getRoomById(@Param('id') id: string) {
     return await this.roomService.findOneById(id);

@@ -245,6 +245,14 @@ export class RoomService {
     return { msg: 'User unbanned' };
   }
 
+  async checkRoomAdmin(userId: string, roomId: string) {
+    const result = await this.prismaService.roomAdmin.findFirst({
+      where: { userId, roomId },
+    });
+
+    return !!result;
+  }
+
   async deleteRoom(id: string) {
     await this.prismaService.roomAdmin.deleteMany({
       where: { roomId: id },
