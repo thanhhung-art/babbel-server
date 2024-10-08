@@ -9,10 +9,37 @@ export class CustomCacheInterceptor extends CacheInterceptor {
     const userId = request.user_id;
     const url = request.url;
 
-    if (userId) {
-      return `cache_${url}_user_${userId}`;
+    if (url.includes('/api/auth/user')) {
+      return undefined;
+    }
+
+    // Include userId for authentication and user-related queries
+    if (url.includes('/auth') || url.includes('/user')) {
+      if (userId) {
+        return `cache_${url}_user_${userId}`;
+      }
+    }
+
+    // Include roomId for room-related queries
+    if (url.includes('/room')) {
+      return `cache_${url}`;
     }
 
     return super.trackBy(context);
   }
+
+  // async intercept(
+  //   context: ExecutionContext,
+  //   next: CallHandler,
+  // ): Promise<Observable<any>> {
+  //   const observable = next.handle().pipe(
+  //     map((response) => {
+  //       if (response instanceof Object) {
+  //         return JSON.parse(JSON.stringify(response));
+  //       }
+  //       return response;
+  //     }),
+  //   );
+  //   return Promise.resolve(observable);
+  // }
 }
