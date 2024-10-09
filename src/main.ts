@@ -1,10 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CustomSocketIoAdapter } from './socket/custom-socket-io.adapter';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.disable('x-powered-by');
+
   app.use(cookieParser());
   app.setGlobalPrefix('api');
   app.useWebSocketAdapter(new CustomSocketIoAdapter(app));
@@ -24,6 +27,12 @@ async function bootstrap() {
     ],
     credentials: true,
   });
+
+  app.use((req, res, next) => {
+    res.header('X-Powered-By', null);
+    next();
+  });
+
   await app.listen(3000);
 }
 bootstrap();
