@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  Inject,
   NotFoundException,
   Post,
   Req,
@@ -13,14 +12,10 @@ import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto, UserDto } from './auth.dto';
 import { Response } from 'express';
 import { Request } from 'src/types';
-import { UserService } from 'src/user/user.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    @Inject() private readonly userService: UserService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
   async signup(@Body() data: RegisterDto) {
@@ -35,8 +30,8 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      expires: new Date(Date.now() + 10 * 60 * 1000), // set 10m
-      maxAge: 10 * 60 * 1000,
+      expires: new Date(Date.now() + 5 * 60 * 1000), // set 5m
+      maxAge: 5 * 60 * 1000,
     });
 
     res.cookie('refreshtoken', refreshToken, {
@@ -65,30 +60,41 @@ export class AuthController {
     let newToken = '';
     let userId = '';
 
-    // If refresh token exists, check if access token exists
-    if (refreshToken) {
-      if (accessToken) {
-        const token = await this.authService.verifyToken(accessToken);
-        // If access token is invalid, refresh the token
-        if (!token) {
-          newToken = (await this.authService.refresh(refreshToken)).newToken;
-          userId = (await this.authService.refresh(refreshToken)).userId;
+    if (accessToken) {
+      try {
+        // check time left
+        const { sub, exp } = await this.authService.verifyToken(accessToken);
+        const currentTime = Math.floor(Date.now() / 1000);
+        const timeLeft = exp - currentTime;
+
+        if (timeLeft <= 30) {
+          const token = await this.authService.refresh(refreshToken);
+          newToken = token.newToken;
+          userId = token.userId;
         } else {
-          userId = token.sub;
+          userId = sub;
         }
-        // If access token doesn't exist, refresh the token
-      } else {
-        newToken = (await this.authService.refresh(refreshToken)).newToken;
-        userId = (await this.authService.refresh(refreshToken)).userId;
+      } catch (err) {
+        if (refreshToken) {
+          const token = await this.authService.refresh(refreshToken);
+          newToken = token.newToken;
+          userId = token.userId;
+        } else {
+          console.error(err);
+          throw new UnauthorizedException('Invalid token');
+        }
       }
-      // If refresh token doesn't exist, throw an error
+    } else if (refreshToken) {
+      const token = await this.authService.refresh(refreshToken);
+      newToken = token.newToken;
+      userId = token.userId;
     } else {
       throw new UnauthorizedException('No refresh token found');
     }
 
     let user: UserDto;
-    if (userId || req.user_id) {
-      const userEntity = await this.userService.findById(userId || req.user_id);
+    if (userId) {
+      const userEntity = await this.authService.findUserById(userId);
       user = {
         id: userEntity.id,
         email: userEntity.email,
@@ -104,8 +110,8 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        expires: new Date(Date.now() + 10 * 60 * 1000),
-        maxAge: 10 * 60 * 1000,
+        expires: new Date(Date.now() + 5 * 60 * 1000),
+        maxAge: 5 * 60 * 1000,
       });
 
     return res.json({

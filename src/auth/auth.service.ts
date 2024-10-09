@@ -51,7 +51,7 @@ export class AuthService {
       { sub: user.id },
       {
         secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: '10m',
+        expiresIn: '5m',
       },
     );
 
@@ -114,12 +114,16 @@ export class AuthService {
         { sub: decoded.sub },
         {
           secret: this.configService.get<string>('JWT_SECRET'),
-          expiresIn: '10m',
+          expiresIn: '5m',
         },
       );
       return { newToken, userId: decoded.sub };
     } catch (error) {
       throw new UnauthorizedException('Invalid token');
     }
+  }
+
+  async findUserById(id: string) {
+    return this.userService.findById(id);
   }
 }
