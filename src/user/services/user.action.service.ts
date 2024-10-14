@@ -287,4 +287,24 @@ export class UserActionService {
 
     return !!result;
   }
+
+  async leaveRoom(userId: string, roomId: string) {
+    await this.prismaService.chatting.deleteMany({
+      where: { userId, roomId },
+    });
+
+    await this.prismaService.roomMember.deleteMany({
+      where: { userId, roomId },
+    });
+
+    return { msg: 'User left room' };
+  }
+
+  async getRoomsJoined(userId: string) {
+    const rooms = await this.prismaService.room.findMany({
+      where: { members: { some: { userId } } },
+    });
+
+    return rooms;
+  }
 }

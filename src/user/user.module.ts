@@ -5,6 +5,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { UserActionService } from './services/user.action.service';
 import { UserFriendService } from './services/user.friend.service';
 import { UserConversationService } from './services/user.conversation.service';
+import { CacheService } from 'src/cache/cache.service';
 
 const services = [
   UserService,
@@ -14,7 +15,7 @@ const services = [
 ];
 
 @Module({
-  providers: services,
+  providers: [...services, CacheService],
   controllers: [UserController],
   imports: [PrismaModule],
   exports: services,

@@ -9,10 +9,14 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Request } from 'src/types';
+import { CacheService } from 'src/cache/cache.service';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly cacheService: CacheService,
+  ) {}
 
   @Get()
   async findAll() {
@@ -72,6 +76,11 @@ export class UserController {
     return { isAdmin: result };
   }
 
+  @Get('room-joined')
+  async getRoomsJoined(@Req() req: Request) {
+    return await this.userService.getRoomsJoined(req.user_id);
+  }
+
   @Get(':email')
   async findOne(@Param('email') id: string) {
     return await this.userService.findOne(id);
@@ -109,6 +118,18 @@ export class UserController {
   @Post('/unfriend/:id')
   async unfriend(@Req() req: Request, @Param('id') friendId: string) {
     return await this.userService.unfriend(req.user_id, friendId);
+  }
+
+  @Post('/leave-room/:id')
+  async leaveRoom(@Req() req: Request, @Param('id') roomId: string) {
+    await this.cacheService.clearCacheByKey(
+      `cache_/api/user/chatting_user_${req.user_id}`,
+    );
+    await this.cacheService.clearCachesByKeys([
+      `cache_/api/user/chatting_user_${req.user_id}`,
+      `cache_/api/user/chatting_user_${roomId}`,
+    ]);
+    return await this.userService.leaveRoom(req.user_id, roomId);
   }
 
   @Delete('/friend-request/:id')

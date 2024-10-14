@@ -130,4 +130,12 @@ export class UserService {
   checkRoomAdmin(userId: string, roomId: string) {
     return this.userActionService.checkRoomAdmin(userId, roomId);
   }
+
+  leaveRoom(userId: string, roomId: string) {
+    return this.userActionService.leaveRoom(userId, roomId);
+  }
+
+  getRoomsJoined(userId: string) {
+    return this.userActionService.getRoomsJoined(userId);
+  }
 }
