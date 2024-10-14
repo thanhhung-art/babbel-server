@@ -17,4 +17,10 @@ export class CacheService {
   async clearCacheByKey(key: string): Promise<void> {
     await this.cacheService.del(key);
   }
+
+  async clearCachesByKeys(keys: string[]): Promise<void> {
+    for (const key of keys) {
+      await this.cacheService.del(key);
+    }
+  }
 }
