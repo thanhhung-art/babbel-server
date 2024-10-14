@@ -122,12 +122,10 @@ export class UserController {
 
   @Post('/leave-room/:id')
   async leaveRoom(@Req() req: Request, @Param('id') roomId: string) {
-    await this.cacheService.clearCacheByKey(
-      `cache_/api/user/chatting_user_${req.user_id}`,
-    );
     await this.cacheService.clearCachesByKeys([
       `cache_/api/user/chatting_user_${req.user_id}`,
       `cache_/api/user/chatting_user_${roomId}`,
+      `cache_/api/user/room-joined_user_${req.user_id}`,
     ]);
     return await this.userService.leaveRoom(req.user_id, roomId);
   }
