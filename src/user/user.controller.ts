@@ -91,6 +91,10 @@ export class UserController {
     @Req() req: Request,
     @Query('friend_id') friendId: string,
   ) {
+    await this.cacheService.clearCachesByKeys([
+      `cache_/api/user/friend-request_${req.user_id}`,
+      `cache_/api/user/request-friend_${req.user_id}`,
+    ]);
     return await this.userService.sendFriendRequest(req.user_id, friendId);
   }
 
@@ -99,11 +103,19 @@ export class UserController {
     @Req() req: Request,
     @Query('friend_id') friendId: string,
   ) {
+    await this.cacheService.clearCachesByKeys([
+      `cache_/api/user/friend-request_${req.user_id}`,
+      `cache_/api/user/request-friend_${req.user_id}`,
+    ]);
     return await this.userService.acceptFriendRequest(friendId, req.user_id);
   }
 
   @Post('/add-to-chatting')
   async addToChating(@Req() req: Request, @Query('id') friendId: string) {
+    await this.cacheService.clearCachesByKeys([
+      `cache_/api/user/chatting_user_${req.user_id}`,
+      `cache_/api/user/chatting_user_${friendId}`,
+    ]);
     return await this.userService.addConversationToChatting(
       req.user_id,
       friendId,
@@ -117,6 +129,10 @@ export class UserController {
 
   @Post('/unfriend/:id')
   async unfriend(@Req() req: Request, @Param('id') friendId: string) {
+    await this.cacheService.clearCachesByKeys([
+      `cache_/api/user/friends_${req.user_id}`,
+      `cache_/api/user/friends_${friendId}`,
+    ]);
     return await this.userService.unfriend(req.user_id, friendId);
   }
 
@@ -135,11 +151,17 @@ export class UserController {
     @Param('id') friendId: string,
     @Req() req: Request,
   ) {
+    await this.cacheService.clearCacheByKey(
+      `cache_/api/user/friend-request_${req.user_id}`,
+    );
     return await this.userService.deleteFriendRequest(friendId, req.user_id);
   }
 
   @Delete('/chatting/:id')
   async deleteChatting(@Param('id') conversationId: string) {
+    await this.cacheService.clearCacheByKey(
+      `cache_/api/user/chatting_user_${conversationId}`,
+    );
     return await this.userService.removeConversationFromChatting(
       conversationId,
     );

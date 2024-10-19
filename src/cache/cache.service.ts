@@ -23,4 +23,16 @@ export class CacheService {
       await this.cacheService.del(key);
     }
   }
+
+  async updateCacheByKey(key: string, value: any): Promise<void> {
+    await this.cacheService.set(key, value);
+  }
+
+  async updateCachesByKeys(
+    caches: { key: string; value: any }[],
+  ): Promise<void> {
+    for (const cache of caches) {
+      await this.cacheService.set(cache.key, cache.value);
+    }
+  }
 }
