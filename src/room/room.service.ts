@@ -238,6 +238,24 @@ export class RoomService {
     });
   }
 
+  async getTotalMembersByRoomId(roomId: string) {
+    return await this.prismaService.roomMember.count({
+      where: { roomId },
+    });
+  }
+
+  async getTotalJoinRequestsByRoomId(roomId: string) {
+    return await this.prismaService.joinRequest.count({
+      where: { roomId },
+    });
+  }
+
+  async getTotalBannedUsersByRoomId(roomId: string) {
+    return await this.prismaService.bannedUser.count({
+      where: { roomId },
+    });
+  }
+
   async unbanUser(userId: string, roomId: string) {
     await this.prismaService.bannedUser.deleteMany({
       where: { userId, roomId },

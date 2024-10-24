@@ -68,6 +68,24 @@ export class RoomController {
     return { isAdmin: result };
   }
 
+  @Get('/total-member/:id')
+  async getMembersAmount(@Param('id') roomId: string) {
+    const result = await this.roomService.getTotalMembersByRoomId(roomId);
+    return { total: result };
+  }
+
+  @Get('/total-join-request/:id')
+  async getJoinRequestAmount(@Param('id') roomId: string) {
+    const result = await this.roomService.getTotalJoinRequestsByRoomId(roomId);
+    return { total: result };
+  }
+
+  @Get('/total-banned/:id')
+  async getBannedUsersAmount(@Param('id') roomId: string) {
+    const result = await this.roomService.getTotalBannedUsersByRoomId(roomId);
+    return { total: result };
+  }
+
   @Get(':id')
   async getRoomById(@Param('id') id: string) {
     return await this.roomService.findOneById(id);
