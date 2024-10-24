@@ -54,6 +54,7 @@ model Room {
   id             String          @id @default(uuid())
   name           String
   avatar         String
+  public         Boolean         @default(false)
   createdAt      DateTime        @default(now())
   updateAt       DateTime        @updatedAt
   members        RoomMember[]
