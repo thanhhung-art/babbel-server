@@ -11,3 +11,12 @@ export interface ICreateRoom {
   avatar: string;
   userId: string;
 }
+
+export interface IUpdateRoom {
+  id: string;
+  name?: string;
+  avatar?: string;
+  description?: string;
+  isPublic?: boolean;
+  adminId: string;
+}

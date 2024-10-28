@@ -6,6 +6,7 @@ import {
   Inject,
   Param,
   Post,
+  Put,
   Query,
   Req,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import {
   BanUserDto,
   KickUserDto,
   RejectRequestDto,
+  UpdateRoomDto,
 } from './room.dto';
 import { CacheService } from 'src/cache/cache.service';
 
@@ -33,11 +35,6 @@ export class RoomController {
     @Query('status') status: 'joined' | 'unjoined',
   ) {
     return await this.roomService.findByName(value, status, req.user_id);
-  }
-
-  @Get('/joined')
-  async findRoomByUserId(@Req() req: Request) {
-    return await this.roomService.findRommByUserId(req.user_id);
   }
 
   @Get('/conversation/messages')
@@ -84,6 +81,11 @@ export class RoomController {
   async getBannedUsersAmount(@Param('id') roomId: string) {
     const result = await this.roomService.getTotalBannedUsersByRoomId(roomId);
     return { total: result };
+  }
+
+  @Get('/info/:id')
+  async getAllRooms(@Param('id') id: string) {
+    return await this.roomService.getRoomInfo(id);
   }
 
   @Get(':id')
@@ -161,8 +163,21 @@ export class RoomController {
     @Req() req: Request,
     @Body() data: { name: string; avatar: string },
   ) {
-    await this.cacheService.clearCacheByKey('cache_/api/room/joined');
     return await this.roomService.create({ ...data, userId: req.user_id });
+  }
+
+  @Put(':id')
+  async updateRoom(
+    @Param('id') id: string,
+    @Req() req: Request,
+    @Body() data: UpdateRoomDto,
+  ) {
+    await this.cacheService.clearCachesByKeys([`cache_/api/room/info/${id}`]);
+    return await this.roomService.updateRoom({
+      id,
+      ...data,
+      adminId: req.user_id,
+    });
   }
 
   @Delete(':id')

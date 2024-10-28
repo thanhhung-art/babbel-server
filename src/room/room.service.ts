@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ICreateRoom } from './room.types';
+import { ICreateRoom, IUpdateRoom } from './room.types';
 
 @Injectable()
 export class RoomService {
@@ -269,6 +269,51 @@ export class RoomService {
     });
 
     return !!result;
+  }
+
+  async getRoomInfo(roomId: string) {
+    const room = await this.prismaService.room.findUnique({
+      where: { id: roomId },
+    });
+
+    return {
+      name: room.name,
+      avatar: room.avatar,
+      isPublic: room.public,
+      description: room.description,
+    };
+  }
+
+  async updateRoom({
+    id,
+    name,
+    description,
+    avatar,
+    isPublic,
+    adminId,
+  }: IUpdateRoom) {
+    const isAdmin = await this.checkRoomAdmin(adminId, id);
+    if (!isAdmin) {
+      throw new Error('Only admins can update the room');
+    }
+
+    const dataToUpdate: IUpdateRoom = { id, adminId };
+
+    if (name) dataToUpdate.name = name;
+    if (avatar) dataToUpdate.avatar = avatar;
+    if (isPublic) dataToUpdate.isPublic = isPublic;
+    if (description) dataToUpdate.description = description;
+
+    await this.prismaService.room.update({
+      where: { id },
+      data: {
+        name,
+        avatar,
+        public: isPublic,
+      },
+    });
+
+    return 'Room updated';
   }
 
   async deleteRoom(id: string) {
