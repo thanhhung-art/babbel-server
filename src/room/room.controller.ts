@@ -166,7 +166,7 @@ export class RoomController {
     return await this.roomService.create({ ...data, userId: req.user_id });
   }
 
-  @Put(':id')
+  @Put('/update/:id')
   async updateRoom(
     @Param('id') id: string,
     @Req() req: Request,

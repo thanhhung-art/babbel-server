@@ -12,11 +12,18 @@ export interface ICreateRoom {
   userId: string;
 }
 
-export interface IUpdateRoom {
+export interface IUpdateRoomParams {
   id: string;
   name?: string;
   avatar?: string;
   description?: string;
   isPublic?: boolean;
   adminId: string;
+}
+
+export interface IUpdateRoomData {
+  name?: string;
+  avatar?: string;
+  description?: string;
+  isPublic?: boolean;
 }

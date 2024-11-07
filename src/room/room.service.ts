@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ICreateRoom, IUpdateRoom } from './room.types';
+import { ICreateRoom, IUpdateRoomData, IUpdateRoomParams } from './room.types';
 
 @Injectable()
 export class RoomService {
@@ -291,26 +291,23 @@ export class RoomService {
     avatar,
     isPublic,
     adminId,
-  }: IUpdateRoom) {
+  }: IUpdateRoomParams) {
     const isAdmin = await this.checkRoomAdmin(adminId, id);
     if (!isAdmin) {
-      throw new Error('Only admins can update the room');
+      throw new BadRequestException('Only admins can update the room');
     }
 
-    const dataToUpdate: IUpdateRoom = { id, adminId };
+    const dataToUpdate: IUpdateRoomData = {};
 
     if (name) dataToUpdate.name = name;
     if (avatar) dataToUpdate.avatar = avatar;
     if (isPublic) dataToUpdate.isPublic = isPublic;
     if (description) dataToUpdate.description = description;
+    console.log(dataToUpdate);
 
     await this.prismaService.room.update({
       where: { id },
-      data: {
-        name,
-        avatar,
-        public: isPublic,
-      },
+      data: dataToUpdate,
     });
 
     return 'Room updated';

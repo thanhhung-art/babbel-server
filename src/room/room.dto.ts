@@ -16,10 +16,6 @@ export class BanUserDto extends KickUserDto {}
 
 export class UpdateRoomDto {
   @IsString()
-  @IsNotEmpty()
-  id: string;
-
-  @IsString()
   @IsOptional()
   name: string;
 

@@ -103,6 +103,35 @@ export class UserConversationService {
     return conversations;
   }
 
+  async getConversationById(conversationId: string, userId: string) {
+    const conversation = await this.prismaService.conversation.findUnique({
+      where: {
+        id: conversationId,
+      },
+      include: {
+        participants: {
+          where: {
+            NOT: {
+              id: userId,
+            },
+          },
+          select: {
+            id: true,
+            email: true,
+            avatar: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!conversation) {
+      return { msg: 'Not found' };
+    }
+
+    return conversation;
+  }
+
   async getConversationMessages(conversationId: string) {
     const result = await this.prismaService.messageInConversation.findMany({
       where: {
@@ -180,34 +209,6 @@ export class UserConversationService {
     const result = await this.prismaService.chatting.findMany({
       where: {
         userId,
-      },
-      include: {
-        conversation: {
-          include: {
-            participants: {
-              where: {
-                NOT: {
-                  id: userId,
-                },
-              },
-              select: {
-                id: true,
-                email: true,
-                avatar: true,
-                name: true,
-              },
-            },
-          },
-        },
-        room: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-            createdAt: true,
-            updateAt: true,
-          },
-        },
       },
     });
 
