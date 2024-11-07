@@ -9,6 +9,10 @@ export class CustomCacheInterceptor extends CacheInterceptor {
     const userId = request.user_id;
     const url = request.url;
 
+    if (request.method !== 'GET') {
+      return undefined;
+    }
+
     if (url.includes('/api/auth/user')) {
       return undefined;
     }
@@ -27,19 +31,4 @@ export class CustomCacheInterceptor extends CacheInterceptor {
 
     return super.trackBy(context);
   }
-
-  // async intercept(
-  //   context: ExecutionContext,
-  //   next: CallHandler,
-  // ): Promise<Observable<any>> {
-  //   const observable = next.handle().pipe(
-  //     map((response) => {
-  //       if (response instanceof Object) {
-  //         return JSON.parse(JSON.stringify(response));
-  //       }
-  //       return response;
-  //     }),
-  //   );
-  //   return Promise.resolve(observable);
-  // }
 }
