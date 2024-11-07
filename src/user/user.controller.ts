@@ -38,12 +38,20 @@ export class UserController {
     return await this.userService.getFriends(req.user_id);
   }
 
-  @Get('/conversation')
-  async createConversation(
-    @Query('friend_id') friendId: string,
+  @Get('/conversation/messages')
+  async getMessages(@Query('id') conversationId: string) {
+    return await this.userService.getConversationMessages(conversationId);
+  }
+
+  @Get('/conversation/:id')
+  async getConversation(
+    @Param('id') conversationId: string,
     @Req() req: Request,
   ) {
-    return await this.userService.getConversation(req.user_id, friendId);
+    return await this.userService.getConversationById(
+      conversationId,
+      req.user_id,
+    );
   }
 
   @Get('/conversations')
@@ -51,9 +59,12 @@ export class UserController {
     return await this.userService.getConversations(req.user_id);
   }
 
-  @Get('/conversation/messages')
-  async getMessages(@Query('id') conversationId: string) {
-    return await this.userService.getConversationMessages(conversationId);
+  @Get('/conversation')
+  async createConversation(
+    @Query('friend_id') friendId: string,
+    @Req() req: Request,
+  ) {
+    return await this.userService.getConversation(req.user_id, friendId);
   }
 
   @Get('/search')

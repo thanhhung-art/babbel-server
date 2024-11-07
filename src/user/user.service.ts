@@ -74,6 +74,13 @@ export class UserService {
     return this.userConversationService.getConversations(userId);
   }
 
+  getConversationById(conversationId: string, userId: string) {
+    return this.userConversationService.getConversationById(
+      conversationId,
+      userId,
+    );
+  }
+
   getConversationMessages(conversationId: string) {
     return this.userConversationService.getConversationMessages(conversationId);
   }
