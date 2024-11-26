@@ -10,6 +10,8 @@ export interface ICreateRoom {
   name: string;
   avatar: string;
   userId: string;
+  descriotion: string;
+  isPublic: boolean;
 }
 
 export interface IUpdateRoomParams {

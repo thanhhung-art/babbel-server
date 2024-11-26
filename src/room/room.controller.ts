@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -161,9 +162,20 @@ export class RoomController {
   @Post()
   async createRoom(
     @Req() req: Request,
-    @Body() data: { name: string; avatar: string },
+    @Body()
+    data: { name: string; avatar: string; isPublic: boolean; desc: string },
   ) {
-    return await this.roomService.create({ ...data, userId: req.user_id });
+    await this.cacheService.clearCachesByKeys([
+      'cache_/api/user/room-joined_user_' + req.user_id,
+      'cache_/api/user/chatting_user_' + req.user_id,
+    ]);
+
+    return await this.roomService.create({
+      ...data,
+      userId: req.user_id,
+      isPublic: data.isPublic,
+      descriotion: data.desc,
+    });
   }
 
   @Put('/update/:id')
@@ -181,8 +193,17 @@ export class RoomController {
   }
 
   @Delete(':id')
-  async deleteRoom(@Param('id') id: string) {
-    await this.cacheService.clearCacheByKey('cache_/api/room/joined');
-    return await this.roomService.deleteRoom(id);
+  async deleteRoom(@Req() req: Request, @Param('id') id: string) {
+    if (!id) {
+      throw new BadRequestException('Room id is required');
+    }
+
+    await this.cacheService.clearCacheByKey(
+      'cache_/api/user/room-joined_user_' + req.user_id,
+    );
+    await this.cacheService.clearRoomCaches(id);
+    await this.roomService.deleteRoom(id);
+
+    return { message: 'Room deleted' };
   }
 }

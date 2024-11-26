@@ -11,6 +11,8 @@ export class RoomService {
       data: {
         name: data.name,
         avatar: data.avatar,
+        public: data.isPublic,
+        description: data.descriotion,
       },
     });
 
@@ -26,6 +28,13 @@ export class RoomService {
         userId: data.userId,
         roomId: roomCreated.id,
         role: 'ADMIN',
+      },
+    });
+
+    await this.prismaService.chatting.create({
+      data: {
+        userId: data.userId,
+        roomId: roomCreated.id,
       },
     });
 
@@ -314,11 +323,35 @@ export class RoomService {
   }
 
   async deleteRoom(id: string) {
+    const room = await this.prismaService.room.findUnique({
+      where: { id },
+    });
+
+    if (!room) {
+      throw new BadRequestException('Room not found');
+    }
+
     await this.prismaService.roomAdmin.deleteMany({
       where: { roomId: id },
     });
 
     await this.prismaService.roomMember.deleteMany({
+      where: { roomId: id },
+    });
+
+    await this.prismaService.chatting.deleteMany({
+      where: { roomId: id },
+    });
+
+    await this.prismaService.joinRequest.deleteMany({
+      where: { roomId: id },
+    });
+
+    await this.prismaService.bannedUser.deleteMany({
+      where: { roomId: id },
+    });
+
+    await this.prismaService.messageInRoom.deleteMany({
       where: { roomId: id },
     });
 
