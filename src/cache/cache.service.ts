@@ -35,4 +35,13 @@ export class CacheService {
       await this.cacheService.set(cache.key, cache.value);
     }
   }
+
+  async clearRoomCaches(roomId: string): Promise<void> {
+    const pattern = `*${roomId}:*`;
+    const keys = await this.cacheService.store.keys(pattern);
+
+    if (keys.length > 0) {
+      await this.clearCachesByKeys(keys);
+    }
+  }
 }
