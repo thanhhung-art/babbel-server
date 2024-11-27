@@ -163,7 +163,12 @@ export class RoomController {
   async createRoom(
     @Req() req: Request,
     @Body()
-    data: { name: string; avatar: string; isPublic: boolean; desc: string },
+    data: {
+      name: string;
+      avatar: string;
+      isPublic: boolean;
+      description: string;
+    },
   ) {
     await this.cacheService.clearCachesByKeys([
       'cache_/api/user/room-joined_user_' + req.user_id,
@@ -171,10 +176,11 @@ export class RoomController {
     ]);
 
     return await this.roomService.create({
-      ...data,
+      name: data.name,
+      avatar: data.avatar,
       userId: req.user_id,
       isPublic: data.isPublic,
-      descriotion: data.desc,
+      description: data.description,
     });
   }
 

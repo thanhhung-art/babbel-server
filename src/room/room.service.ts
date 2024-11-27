@@ -12,7 +12,7 @@ export class RoomService {
         name: data.name,
         avatar: data.avatar,
         public: data.isPublic,
-        description: data.descriotion,
+        description: data.description,
       },
     });
 

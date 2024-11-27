@@ -10,7 +10,7 @@ export interface ICreateRoom {
   name: string;
   avatar: string;
   userId: string;
-  descriotion: string;
+  description: string;
   isPublic: boolean;
 }
 
