@@ -57,4 +57,44 @@ export class FileController {
 
     return { fileData: '', status: 'uploading' };
   }
+
+  @Post('upload-profile-image')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadProfileImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: FileDto,
+  ) {
+    const { fileName, type, totalChunks } = body;
+    if (!this.tempChunks[fileName]) {
+      this.tempChunks[fileName] = {
+        chunks: [],
+        totalChunks: parseInt(totalChunks),
+        type,
+      };
+    }
+
+    this.tempChunks[fileName].chunks[parseInt(body.chunkIndex)] = file.buffer;
+
+    if (
+      this.tempChunks[fileName].chunks.length ===
+        this.tempChunks[fileName].totalChunks &&
+      !this.tempChunks[fileName].chunks.includes(undefined)
+    ) {
+      const buffer = this.fileService.concatBuffer(
+        this.tempChunks[fileName].chunks,
+      );
+
+      const url = await this.fileService.uploadProfileImage(
+        buffer,
+        fileName,
+        type,
+      );
+
+      delete this.tempChunks[fileName];
+
+      return { url, status: 'uploaded' };
+    }
+
+    return { url: '', status: 'uploading' };
+  }
 }

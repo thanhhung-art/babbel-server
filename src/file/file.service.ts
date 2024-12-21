@@ -55,4 +55,10 @@ export class FileService {
 
     return file.id;
   }
+
+  async uploadProfileImage(buffer: Buffer, fileName: string, type: string) {
+    const url = await this.awsService.uploadFIleToS3(buffer, fileName, type);
+
+    return url;
+  }
 }
