@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ICreateUser } from '../user.type';
+import { ICreateUser, IDataToUpdate } from '../user.type';
 import { generateSalt, hashPassword } from 'src/utils/crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Cache } from 'cache-manager';
@@ -306,5 +306,33 @@ export class UserActionService {
     });
 
     return rooms;
+  }
+
+  async updateProfile(
+    userId: string,
+    avatar: string | null,
+    name: string | null,
+    email: string | null,
+  ) {
+    const dataToUpdate: IDataToUpdate = {};
+
+    if (name) {
+      dataToUpdate.name = name;
+    }
+
+    if (email) {
+      dataToUpdate.email = email;
+    }
+
+    if (avatar) {
+      dataToUpdate.avatar = avatar;
+    }
+
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: dataToUpdate,
+    });
+
+    return { msg: 'Profile updated' };
   }
 }

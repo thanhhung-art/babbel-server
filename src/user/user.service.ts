@@ -145,4 +145,8 @@ export class UserService {
   getRoomsJoined(userId: string) {
     return this.userActionService.getRoomsJoined(userId);
   }
+
+  updateProfile(userId: string, avatar: string, name: string, email: string) {
+    return this.userActionService.updateProfile(userId, avatar, name, email);
+  }
 }

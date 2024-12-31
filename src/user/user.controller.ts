@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Query,
   Req,
 } from '@nestjs/common';
@@ -155,6 +156,20 @@ export class UserController {
       `cache_/api/user/room-joined_user_${req.user_id}`,
     ]);
     return await this.userService.leaveRoom(req.user_id, roomId);
+  }
+
+  @Put('/update-profile')
+  async update(@Req() req: Request) {
+    const { name, email, avatar } = req.body;
+    await this.cacheService.clearCacheByKey(
+      `cache_/api/auth/user_user_${req.user_id}`,
+    );
+    return await this.userService.updateProfile(
+      req.user_id,
+      avatar,
+      name,
+      email,
+    );
   }
 
   @Delete('/friend-request/:id')

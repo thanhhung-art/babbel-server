@@ -3,3 +3,9 @@ export interface ICreateUser {
   name: string;
   password: string;
 }
+
+export interface IDataToUpdate {
+  email?: string;
+  name?: string;
+  avatar?: string;
+}
