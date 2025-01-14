@@ -172,6 +172,16 @@ export class UserController {
     );
   }
 
+  @Put('/reset-password')
+  async resetPassword(@Req() req: Request) {
+    const { oldPassword, newPassword } = req.body;
+    return await this.userService.resetPassword(
+      req.user_id,
+      oldPassword,
+      newPassword,
+    );
+  }
+
   @Delete('/friend-request/:id')
   async deleteFriendRequest(
     @Param('id') friendId: string,

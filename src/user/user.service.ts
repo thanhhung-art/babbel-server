@@ -149,4 +149,8 @@ export class UserService {
   updateProfile(userId: string, avatar: string, name: string, email: string) {
     return this.userActionService.updateProfile(userId, avatar, name, email);
   }
+
+  resetPassword(id: string, oldPassword: string, newPassword: string) {
+    return this.userActionService.resetPassword(id, oldPassword, newPassword);
+  }
 }

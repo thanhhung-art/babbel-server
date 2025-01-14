@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpException, Inject, Injectable } from '@nestjs/common';
 import { ICreateUser, IDataToUpdate } from '../user.type';
-import { generateSalt, hashPassword } from 'src/utils/crypto';
+import { generateSalt, hashPassword, verifyPassword } from 'src/utils/crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -334,5 +334,39 @@ export class UserActionService {
     });
 
     return { msg: 'Profile updated' };
+  }
+
+  async resetPassword(id: string, oldPassword: string, newPassword: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new HttpException('User not found', 404);
+    }
+
+    const checkOldPassword = verifyPassword(
+      oldPassword,
+      user.salt,
+      user.password,
+    );
+
+    if (!checkOldPassword) {
+      throw new HttpException('Old password is incorrect', 400);
+    }
+
+    const saltToHash = generateSalt(16);
+
+    const { hashedPassword, salt } = hashPassword(newPassword, saltToHash);
+
+    await this.prismaService.user.update({
+      where: { id },
+      data: {
+        password: hashedPassword,
+        salt,
+      },
+    });
+
+    return { msg: 'Password updated' };
   }
 }
