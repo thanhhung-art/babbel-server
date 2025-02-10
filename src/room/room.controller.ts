@@ -144,6 +144,8 @@ export class RoomController {
   async banUser(@Body() data: BanUserDto) {
     await this.roomService.banUser(data.userId, data.roomId);
     await this.cacheService.clearCachesByKeys([
+      `cache_/api/room/total-members/${data.roomId}`,
+      `cache_/api/room/total-banned/${data.roomId}`,
       `cache_/api/room/members/${data.roomId}`,
       `cache_/api/room/banned/${data.roomId}`,
     ]);
