@@ -49,7 +49,9 @@ export class AuthController {
   @Post('logout')
   async logout(@Res() res: Response) {
     res.clearCookie('authtoken');
-    res.clearCookie('refreshtoken');
+    res.clearCookie('refreshtoken', {
+      path: '/api/auth/user',
+    });
     return res.json({ message: 'Logged out' });
   }
 
