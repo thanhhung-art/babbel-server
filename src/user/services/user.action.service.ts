@@ -15,6 +15,18 @@ export class UserActionService {
   ) {}
 
   async create(data: ICreateUser) {
+    if (!data.email || !data.password || !data.name) {
+      throw new HttpException('Email and password and name are required', 400);
+    }
+
+    const userExists = await this.prismaService.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (userExists) {
+      throw new HttpException('User with this email already exists', 400);
+    }
+
     const saltToHash = generateSalt(16);
     const { hashedPassword, salt } = hashPassword(data.password, saltToHash);
 
