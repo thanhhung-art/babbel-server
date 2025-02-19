@@ -31,4 +31,6 @@ export class UserDto {
   email: string;
   name: string;
   avatar?: string;
+  createdAt: Date;
+  updateAt: Date;
 }
