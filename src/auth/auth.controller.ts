@@ -102,6 +102,8 @@ export class AuthController {
         email: userEntity.email,
         avatar: userEntity.avatar,
         name: userEntity.name,
+        createdAt: userEntity.createdAt,
+        updateAt: userEntity.updateAt,
       };
     } else {
       throw new NotFoundException('Not found user id');
@@ -116,11 +118,6 @@ export class AuthController {
         maxAge: 5 * 60 * 1000,
       });
 
-    return res.json({
-      id: user.id,
-      email: user.email,
-      avatar: user.avatar,
-      name: user.name,
-    });
+    return res.json(user);
   }
 }
