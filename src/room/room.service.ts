@@ -57,16 +57,14 @@ export class RoomService {
     });
   }
 
-  async findByName(
-    name: string,
-    status: 'joined' | 'unjoined',
-    userId: string,
-  ) {
+  async findByName(name: string) {
+    if (!name) {
+      return [];
+    }
+
     return await this.prismaService.room.findMany({
       where: {
         name: { contains: name },
-        members:
-          status === 'joined' ? { some: { userId } } : { none: { userId } },
       },
       select: {
         id: true,

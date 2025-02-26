@@ -30,12 +30,8 @@ export class RoomController {
   ) {}
 
   @Get('/search')
-  async findOneByName(
-    @Req() req: Request,
-    @Query('value') value: string,
-    @Query('status') status: 'joined' | 'unjoined',
-  ) {
-    return await this.roomService.findByName(value, status, req.user_id);
+  async findOneByName(@Query('value') value: string) {
+    return await this.roomService.findByName(value);
   }
 
   @Get('/conversation/messages')
