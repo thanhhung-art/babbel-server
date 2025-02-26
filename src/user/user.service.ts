@@ -34,12 +34,8 @@ export class UserService {
     return this.userActionService.findById(id);
   }
 
-  findByName(name: string, status: 'friend' | 'unfriend', userId: string) {
-    return this.userActionService.findByName(name, status, userId);
-  }
-
-  delete(id: string) {
-    return this.userActionService.delete(id);
+  findByName(name: string) {
+    return this.userActionService.findByName(name);
   }
 
   sendFriendRequest(userId: string, friendId: string) {
@@ -152,5 +148,9 @@ export class UserService {
 
   resetPassword(id: string, oldPassword: string, newPassword: string) {
     return this.userActionService.resetPassword(id, oldPassword, newPassword);
+  }
+
+  deleteAccount(id: string) {
+    return this.userActionService.deleteAccount(id);
   }
 }

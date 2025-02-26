@@ -69,12 +69,8 @@ export class UserController {
   }
 
   @Get('/search')
-  async findByName(
-    @Req() req: Request,
-    @Query('value') value: string,
-    @Query('status') status: 'friend' | 'unfriend',
-  ) {
-    return await this.userService.findByName(value, status, req.user_id);
+  async findByName(@Req() req: Request, @Query('value') value: string) {
+    return await this.userService.findByName(value);
   }
 
   @Get('/chatting')
@@ -204,7 +200,7 @@ export class UserController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return await this.userService.delete(id);
+  async deleteAccount(@Param('id') id: string) {
+    return await this.userService.deleteAccount(id);
   }
 }

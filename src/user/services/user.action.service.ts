@@ -85,26 +85,12 @@ export class UserActionService {
     });
   }
 
-  async findByName(
-    name: string,
-    status: 'friend' | 'unfriend',
-    userId: string,
-  ) {
+  async findByName(name: string) {
+    if (!name.trim()) return [];
+
     return this.prismaService.user.findMany({
       where: {
         name: { contains: name },
-        friends:
-          status === 'friend'
-            ? {
-                some: {
-                  friendId: userId,
-                },
-              }
-            : {
-                none: {
-                  friendId: userId,
-                },
-              },
       },
       select: {
         id: true,
@@ -115,10 +101,6 @@ export class UserActionService {
         name: true,
       },
     });
-  }
-
-  async delete(id: string) {
-    return this.prismaService.user.delete({ where: { id } });
   }
 
   async getFriendsOnline(
@@ -380,5 +362,13 @@ export class UserActionService {
     });
 
     return { msg: 'Password updated' };
+  }
+
+  async deleteAccount(id: string) {
+    await this.prismaService.user.delete({
+      where: { id },
+    });
+
+    return { msg: 'Account deleted' };
   }
 }
