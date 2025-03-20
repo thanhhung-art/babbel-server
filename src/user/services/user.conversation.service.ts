@@ -218,4 +218,55 @@ export class UserConversationService {
 
     return result;
   }
+
+  async searchChatting(userId: string, keyword: string) {
+    const result = await this.prismaService.chatting.findMany({
+      where: {
+        userId,
+        OR: [
+          {
+            conversation: {
+              participants: {
+                some: {
+                  name: {
+                    contains: keyword,
+                    mode: 'insensitive',
+                  },
+                },
+              },
+            },
+          },
+          {
+            room: {
+              name: {
+                contains: keyword,
+                mode: 'insensitive',
+              },
+            },
+          },
+        ],
+      },
+      // include: {
+      //   conversation: {
+      //     include: {
+      //       participants: {
+      //         select: {
+      //           id: true,
+      //           email: true,
+      //           avatar: true,
+      //           name: true,
+      //         },
+      //       },
+      //     },
+      //   },
+      //   room: true,
+      // },
+    });
+
+    if (!result || result.length === 0) {
+      return [];
+    }
+
+    return result;
+  }
 }

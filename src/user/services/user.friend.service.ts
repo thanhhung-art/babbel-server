@@ -26,7 +26,7 @@ export class UserFriendService {
     }
   }
 
-  async getFriendRequest(userId: string) {
+  async getFriendRequestSent(userId: string) {
     const data = await this.prismaService.friendRequest.findMany({
       where: { userId },
     });
@@ -35,11 +35,11 @@ export class UserFriendService {
       return [];
     }
 
-    const friendRequest = data.map((items) => items.friendId);
+    const friendRequestSent = data.map((items) => items.friendId);
 
     const users = await this.prismaService.user.findMany({
       where: {
-        id: { in: friendRequest },
+        id: { in: friendRequestSent },
       },
       select: {
         id: true,
@@ -51,12 +51,12 @@ export class UserFriendService {
     return users;
   }
 
-  async getRequestFriend(userId: string) {
+  async getFriendRequest(userId: string) {
     const data = await this.prismaService.friendRequest.findMany({
       where: { friendId: userId },
     });
 
-    if (!data) {
+    if (!data || data.length === 0) {
       return [];
     }
 

@@ -38,6 +38,10 @@ export class UserService {
     return this.userActionService.findByName(name);
   }
 
+  searchNameInChatting(userId: string, name: string) {
+    return this.userConversationService.searchChatting(userId, name);
+  }
+
   sendFriendRequest(userId: string, friendId: string) {
     return this.userFriendService.sendFriendRequest(userId, friendId);
   }
@@ -46,8 +50,8 @@ export class UserService {
     return this.userFriendService.getFriendRequest(userId);
   }
 
-  getRequestFriend(userId: string) {
-    return this.userFriendService.getRequestFriend(userId);
+  getFriendRequestSent(userId: string) {
+    return this.userFriendService.getFriendRequestSent(userId);
   }
 
   acceptFriendRequest(userId: string, friendId: string) {

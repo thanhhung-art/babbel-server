@@ -29,9 +29,9 @@ export class UserController {
     return await this.userService.getFriendRequest(req.user_id);
   }
 
-  @Get('/request-friend')
+  @Get('/friend-request-sent')
   async findRequestFriend(@Req() req: Request) {
-    return await this.userService.getRequestFriend(req.user_id);
+    return await this.userService.getFriendRequestSent(req.user_id);
   }
 
   @Get('/friends')
@@ -71,6 +71,14 @@ export class UserController {
   @Get('/search')
   async findByName(@Req() req: Request, @Query('value') value: string) {
     return await this.userService.findByName(value);
+  }
+
+  @Get('/search-chatting')
+  async getChattingConversation(
+    @Req() req: Request,
+    @Query('name') keyword: string,
+  ) {
+    return await this.userService.searchNameInChatting(req.user_id, keyword);
   }
 
   @Get('/chatting')
