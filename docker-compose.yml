@@ -7,6 +7,20 @@ services:
     volumes:
       - redis:/data
 
+  postgres:
+    container_name: babbel-database
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: my-password
+      POSTGRES_DB: babbeldb
+
+    ports:
+      - 5433:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
 volumes:
   redis:
+    driver: local
+  pgdata:
     driver: local
