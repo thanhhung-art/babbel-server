@@ -100,21 +100,16 @@ export class RoomController {
 
   @Post('/join/:id')
   async joinRoom(@Req() req: Request, @Param('id') roomId: string) {
-    await this.roomService.requestJoinRoom(req.user_id, roomId);
+    const { msg } = await this.roomService.requestJoinRoom(req.user_id, roomId);
     await this.cacheService.clearCacheByKey(
       `cache_/api/room/join-request/${roomId}`,
     );
-    return { message: 'Request sent', roomId };
+    return { message: msg };
   }
 
   @Post('/accept-join-request')
   async acceptJoinRequest(@Body() data: AcceptRequestDto) {
     await this.roomService.acceptJoinRequest(data.userId, data.roomId);
-    await this.cacheService.clearCachesByKeys([
-      `cache_/api/user/room-joined_user_${data.userId}`,
-      `cache_/api/room/join-request/${data.roomId}`,
-      `cache_/api/room/members/${data.roomId}`,
-    ]);
     return { message: 'Request accepted' };
   }
 

@@ -1,10 +1,22 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ICreateRoom, IUpdateRoomData, IUpdateRoomParams } from './room.types';
+import {
+  ICreateRoom,
+  IExistingJoinRoomRequest,
+  IUpdateRoomData,
+  IUpdateRoomParams,
+} from './room.types';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class RoomService {
-  constructor(@Inject() private readonly prismaService: PrismaService) {}
+  constructor(
+    @Inject() private readonly prismaService: PrismaService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    private readonly cacheService: CacheService,
+  ) {}
 
   async create(data: ICreateRoom) {
     const roomCreated = await this.prismaService.room.create({
@@ -128,6 +140,10 @@ export class RoomService {
   }
 
   async requestJoinRoom(userId: string, roomId: string) {
+    const cacheExistingJoinRequestKey = `user:${userId}:exist-join-request:room:${roomId}`;
+
+    // Check if the user is already a member of the room
+
     const existingRoomMember = await this.prismaService.roomMember.findFirst({
       where: { userId, roomId },
     });
@@ -136,13 +152,30 @@ export class RoomService {
       return { msg: 'Already joined' };
     }
 
+    // Check if the user has already requested to join the room
+
+    const cachedExistingJoinRequestData =
+      await this.cacheManager.get<IExistingJoinRoomRequest>(
+        cacheExistingJoinRequestKey,
+      );
+    if (cachedExistingJoinRequestData) {
+      return { msg: 'Already requested' };
+    }
     const existingJoinRequest = await this.prismaService.joinRequest.findFirst({
       where: { id: userId, roomId },
     });
+    if (existingJoinRequest) {
+      await this.cacheManager.set(
+        cacheExistingJoinRequestKey,
+        existingJoinRequest,
+      );
+    }
 
     if (existingJoinRequest) {
       return { msg: 'Already requested' };
     }
+
+    // Check if the user is banned from the room
 
     const existingBannedUser = await this.prismaService.bannedUser.findFirst({
       where: { userId, roomId },
@@ -152,21 +185,65 @@ export class RoomService {
       return { msg: 'You are banned' };
     }
 
-    return await this.prismaService.joinRequest.create({
+    const room = await this.prismaService.room.findUnique({
+      where: { id: roomId },
+    });
+
+    if (!room) {
+      throw new BadRequestException('Room not found');
+    }
+
+    if (room.public) {
+      return await this.acceptJoinRequest(userId, roomId);
+    }
+
+    await this.prismaService.joinRequest.create({
       data: {
         userId,
         roomId,
       },
     });
+
+    return { msg: 'Request sent' };
   }
 
   async acceptJoinRequest(userId: string, roomId: string) {
-    const existingJoinRequest = await this.prismaService.joinRequest.findFirst({
-      where: { userId, roomId },
-    });
+    let existingJoinRoomRequest: IExistingJoinRoomRequest;
+    let isRoomPublic: boolean;
+    const cacheExistingJoinRequestKey = `user:${userId}:exist-join-request:room:${roomId}`;
+    const cacheIsRoomPublicKey = `room:${roomId}:is-public`;
 
-    if (!existingJoinRequest) {
-      return { msg: 'No request found' };
+    const cachedIsRoomPublicData =
+      await this.cacheManager.get<boolean>(cacheIsRoomPublicKey);
+
+    if (cachedIsRoomPublicData) isRoomPublic = cachedIsRoomPublicData;
+    else {
+      isRoomPublic = (
+        await this.prismaService.room.findUnique({
+          where: { id: roomId },
+        })
+      ).public;
+
+      await this.cacheManager.set(cacheIsRoomPublicKey, isRoomPublic);
+    }
+
+    if (!isRoomPublic) {
+      const cachedExistingJoinRequestData =
+        await this.cacheManager.get<IExistingJoinRoomRequest>(
+          cacheExistingJoinRequestKey,
+        );
+      if (cachedExistingJoinRequestData) {
+        existingJoinRoomRequest = cachedExistingJoinRequestData;
+      } else {
+        existingJoinRoomRequest =
+          await this.prismaService.joinRequest.findFirst({
+            where: { userId, roomId },
+          });
+      }
+
+      if (!existingJoinRoomRequest) {
+        return { msg: 'No request found' };
+      }
     }
 
     await this.prismaService.roomMember.create({
@@ -184,9 +261,19 @@ export class RoomService {
       },
     });
 
-    await this.prismaService.joinRequest.delete({
-      where: { id: existingJoinRequest.id },
-    });
+    if (!isRoomPublic) {
+      if (existingJoinRoomRequest) {
+        await this.prismaService.joinRequest.delete({
+          where: { id: existingJoinRoomRequest.id },
+        });
+      }
+      await this.cacheManager.del(cacheExistingJoinRequestKey);
+    }
+    await this.cacheService.clearCachesByKeys([
+      `cache_/api/user/room-joined_user_${userId}`,
+      `cache_/api/room/join-request/${roomId}`,
+      `cache_/api/room/members/${roomId}`,
+    ]);
 
     return { msg: 'Request accepted' };
   }

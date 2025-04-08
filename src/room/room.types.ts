@@ -29,3 +29,11 @@ export interface IUpdateRoomData {
   description?: string;
   isPublic?: boolean;
 }
+
+export interface IExistingJoinRoomRequest {
+  id: string;
+  userId: string;
+  roomId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
