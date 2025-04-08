@@ -156,7 +156,7 @@ model JoinRequest {
   room      Room     @relation(fields: [roomId], references: [id])
   roomId    String
   createdAt DateTime @default(now())
-  udpateAt  DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
 model FriendRequest {
@@ -166,7 +166,7 @@ model FriendRequest {
   friend    User     @relation(name: "RequestFriend", fields: [friendId], references: [id])
   friendId  String
   createdAt DateTime @default(now())
-  udpateAt  DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
 model UserOnline {
@@ -175,7 +175,8 @@ model UserOnline {
   userId    String   @unique
   socketId  String
   createdAt DateTime @default(now())
-  udpateAt  DateTime @updatedAt
+  updatedAt DateTime @updatedAt
+  lastSeen  DateTime @default(now())
 }
 
 model Conversation {
