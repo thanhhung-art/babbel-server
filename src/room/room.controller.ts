@@ -200,7 +200,7 @@ export class RoomController {
     await this.cacheService.clearCacheByKey(
       'cache_/api/user/room-joined_user_' + req.user_id,
     );
-    await this.cacheService.clearRoomCaches(id);
+    //await this.cacheService.clearRoomCaches(id);
     await this.roomService.deleteRoom(id);
 
     return { message: 'Room deleted' };
