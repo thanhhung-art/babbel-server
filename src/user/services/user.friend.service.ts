@@ -1,9 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class UserFriendService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+  ) {}
 
   async sendFriendRequest(userId: string, friendId: string) {
     const existingRequest = await this.prismaService.friendRequest.findFirst({
@@ -161,5 +166,31 @@ export class UserFriendService {
     });
 
     return users;
+  }
+
+  async getFriendIds(userId: string) {
+    if (!userId) {
+      throw new BadRequestException('Invalid user id');
+    }
+
+    const cacheKey = `friends:${userId}`;
+    const cachedFriends = await this.cacheManager.get<string[]>(cacheKey);
+    if (cachedFriends) {
+      return cachedFriends;
+    }
+
+    const data = await this.prismaService.friends.findMany({
+      where: { userId },
+    });
+
+    if (!data) {
+      return [];
+    }
+
+    const friends = data.map((items) => items.friendId);
+
+    await this.cacheManager.set<string[]>(cacheKey, friends, 1000 * 60 * 60); // Cache for 1 hour
+
+    return friends;
   }
 }

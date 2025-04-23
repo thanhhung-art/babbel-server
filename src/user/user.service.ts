@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { ICreateUser } from './user.type';
 import { UserActionService } from './services/user.action.service';
 import { UserFriendService } from './services/user.friend.service';
@@ -8,7 +7,6 @@ import { UserConversationService } from './services/user.conversation.service';
 @Injectable()
 export class UserService {
   constructor(
-    private readonly prismaService: PrismaService,
     private readonly userActionService: UserActionService,
     private readonly userFriendService: UserFriendService,
     private readonly userConversationService: UserConversationService,
@@ -89,6 +87,10 @@ export class UserService {
     userId: string,
   ): Promise<{ id: string; socketId: string }[]> {
     return this.userActionService.getFriendsOnline(userId);
+  }
+
+  getFriendIds(userId: string) {
+    return this.userFriendService.getFriendIds(userId);
   }
 
   getUserSocketId(userId: string) {

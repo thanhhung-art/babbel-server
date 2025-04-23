@@ -3,15 +3,15 @@ import { ICreateUser, IDataToUpdate } from '../user.type';
 import { generateSalt, hashPassword, verifyPassword } from 'src/utils/crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Cache } from 'cache-manager';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { UserConversationService } from './user.conversation.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class UserActionService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly userConversationService: UserConversationService,
-    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   async create(data: ICreateUser) {
@@ -200,7 +200,7 @@ export class UserActionService {
   }
 
   async unBlockUser(userId: string, friendId: string) {
-    await this.cacheService.del(`${userId}-block-${friendId}`);
+    await this.cacheManager.del(`${userId}-block-${friendId}`);
     await this.prismaService.blockUser.deleteMany({
       where: {
         blockerId: userId,
