@@ -11,7 +11,7 @@ import { UserService } from 'src/user/user.service';
 import { ChatService } from './chat.service';
 import { ICreateMessageInConversation, ICreateMessageInRoom } from './type';
 
-@WebSocketGateway()
+@WebSocketGateway({ namespace: 'chat' })
 export class ChatGateway {
   @WebSocketServer() server: Server;
 
@@ -24,45 +24,9 @@ export class ChatGateway {
     @Inject() private readonly chatService: ChatService,
   ) {}
 
-  async handleConnection(client: Socket): Promise<void> {
-    const userId = client.handshake.query.userId as string;
+  async handleConnection(): Promise<void> {}
 
-    if (userId) {
-      try {
-        await this.userService.createUserOnline(userId, client.id);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    const onlineFriends = await this.userService.getFriendsOnline(userId);
-
-    onlineFriends.forEach((friend) => {
-      this.server.to(friend.socketId).emit('online', userId);
-    });
-
-    client.emit(
-      'online-friends',
-      onlineFriends.map((friend) => friend.id),
-    );
-  }
-
-  async handleDisconnect(client: Socket): Promise<void> {
-    const userId = client.handshake.query.userId as string;
-    if (userId) {
-      try {
-        await this.userService.deleteUserOnline(userId);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    const onlineFriends = await this.userService.getFriendsOnline(userId);
-
-    onlineFriends.forEach((friend) => {
-      this.server.to(friend.socketId).emit('offline', userId);
-    });
-  }
+  async handleDisconnect(): Promise<void> {}
 
   @SubscribeMessage('send-message-to-user')
   async handleMessage(
