@@ -1,6 +1,7 @@
 import { S3Client } from '@aws-sdk/client-s3';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AwsService } from './aws.service';
 
 @Module({
   imports: [ConfigModule],
@@ -19,7 +20,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       },
       inject: [ConfigService],
     },
+    AwsService,
   ],
-  exports: ['AWS_S3_CLIENT'],
+  exports: ['AWS_S3_CLIENT', AwsService],
 })
 export class AwsModule {}
