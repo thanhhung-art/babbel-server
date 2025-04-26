@@ -17,44 +17,6 @@ import { Request } from 'src/types';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('signup')
-  async signup(@Body() data: RegisterDto) {
-    return this.authService.signup(data);
-  }
-
-  @Post('login')
-  async login(@Body() data: LoginDto, @Res() res: Response) {
-    const { user, token, refreshToken } = await this.authService.login(data);
-
-    res.cookie('authtoken', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      expires: new Date(Date.now() + 5 * 60 * 1000), // set 5m
-      maxAge: 5 * 60 * 1000,
-    });
-
-    res.cookie('refreshtoken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // set 7d
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: '/api/auth/user',
-    });
-
-    return res.json(user);
-  }
-
-  @Post('logout')
-  async logout(@Res() res: Response) {
-    res.clearCookie('authtoken');
-    res.clearCookie('refreshtoken', {
-      path: '/api/auth/user',
-    });
-    return res.json({ message: 'Logged out' });
-  }
-
   @Get('user')
   async user(@Req() req: Request, @Res() res: Response) {
     const accessToken = req.cookies['authtoken'];
@@ -119,5 +81,43 @@ export class AuthController {
       });
 
     return res.json(user);
+  }
+
+  @Post('signup')
+  async signup(@Body() data: RegisterDto) {
+    return this.authService.signup(data);
+  }
+
+  @Post('login')
+  async login(@Body() data: LoginDto, @Res() res: Response) {
+    const { user, token, refreshToken } = await this.authService.login(data);
+
+    res.cookie('authtoken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      expires: new Date(Date.now() + 5 * 60 * 1000), // set 5m
+      maxAge: 5 * 60 * 1000,
+    });
+
+    res.cookie('refreshtoken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // set 7d
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/api/auth/user',
+    });
+
+    return res.json(user);
+  }
+
+  @Post('logout')
+  async logout(@Res() res: Response) {
+    res.clearCookie('authtoken');
+    res.clearCookie('refreshtoken', {
+      path: '/api/auth/user',
+    });
+    return res.json({ message: 'Logged out' });
   }
 }
