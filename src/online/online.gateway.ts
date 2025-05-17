@@ -21,23 +21,24 @@ export class OnlineGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (userId) {
       try {
         await this.onlineService.saveUserOnlineStatus(userId, client.id);
+        const onlineFriends =
+          await this.onlineService.getAllOnlineFriends(userId);
+        onlineFriends.forEach((friend) => {
+          this.server.to(friend.socketId).emit('online', userId);
+        });
+
+        setTimeout(async () => {
+          const refreshedOnlineFriends =
+            await this.onlineService.getAllOnlineFriends(userId);
+          client.emit(
+            'online-friends',
+            refreshedOnlineFriends.map((friend) => friend.id),
+          );
+        }, 1000);
       } catch (err) {
         console.error(err);
       }
     }
-
-    const onlineFriends = await this.onlineService.getAllOnlineFriends(userId);
-
-    onlineFriends.forEach((friend) => {
-      this.server.to(friend.socketId).emit('online', userId);
-    });
-
-    client.emit(
-      'online-friends',
-      onlineFriends.map((friend) => friend.id),
-    );
-
-    console.log('Connected online friends:', onlineFriends);
   };
 
   handleDisconnect = async (client: Socket): Promise<void> => {

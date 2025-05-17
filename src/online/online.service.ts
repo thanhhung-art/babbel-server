@@ -11,14 +11,14 @@ export class OnlineService {
   ) {}
 
   private readonly USER_ONLINE_PREFIX = 'user:online:';
-  private readonly DEFAULT_TTL = 86400; // 24 hours in seconds
+  private readonly DEFAULT_TTL = 90000000; // 25 hours in milliseconds
 
   async saveUserOnlineStatus(userId: string, socketId: string): Promise<void> {
     if (!userId) return;
 
     const key = `${this.USER_ONLINE_PREFIX}${userId}`;
+
     await this.cacheManager.set(key, socketId, this.DEFAULT_TTL);
-    console.log(`User ${userId} marked as online`);
   }
 
   async removeUserOnlineStatus(userId: string): Promise<void> {
@@ -26,7 +26,6 @@ export class OnlineService {
 
     const key = `${this.USER_ONLINE_PREFIX}${userId}`;
     await this.cacheManager.del(key);
-    console.log(`User ${userId} marked as offline`);
   }
 
   async isUserOnline(userId: string): Promise<boolean> {
@@ -43,6 +42,7 @@ export class OnlineService {
     if (!userId) return [];
 
     const friendIds = await this.userService.getFriendIds(userId);
+    console.log('friendIds', friendIds);
 
     if (!friendIds || friendIds.length === 0) return [];
 
@@ -50,10 +50,13 @@ export class OnlineService {
     for (const friendId of friendIds) {
       const key = `${this.USER_ONLINE_PREFIX}${friendId}`;
       const result = await this.cacheManager.get<string>(key);
+      console.log(result);
       if (result) {
         onlineFriends.push({ id: friendId, socketId: result });
       }
     }
+
+    console.log('online friends', onlineFriends);
 
     return onlineFriends;
   }
