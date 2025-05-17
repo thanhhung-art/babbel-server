@@ -189,7 +189,7 @@ export class UserFriendService {
 
     const friends = data.map((items) => items.friendId);
 
-    await this.cacheManager.set<string[]>(cacheKey, friends, 1000 * 60 * 60); // Cache for 1 hour
+    await this.cacheManager.set<string[]>(cacheKey, friends, 300000); // Cache for 5 minutes
 
     return friends;
   }
