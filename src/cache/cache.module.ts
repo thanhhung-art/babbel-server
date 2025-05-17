@@ -17,16 +17,15 @@ import { CustomCacheInterceptor } from './CustomCacheInterceptor';
         stores: [
           new Keyv({
             store: new CacheableMemory({
-              ttl: 6000,
+              ttl: 1800000, // 30 minutes in milliseconds
               lruSize: 5000,
             }),
           }),
-          createKeyv(configService.get('REDIS_URL', 'redis://localhost:6379')),
+          createKeyv(configService.get('REDIS_URL')),
         ],
       }),
     }),
   ],
-  exports: [CacheService, NestCacheModule],
   providers: [
     CacheService,
     {
@@ -34,5 +33,6 @@ import { CustomCacheInterceptor } from './CustomCacheInterceptor';
       useClass: CustomCacheInterceptor,
     },
   ],
+  exports: [CacheService, NestCacheModule],
 })
 export class CacheModule {}
