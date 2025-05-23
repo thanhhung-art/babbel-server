@@ -42,7 +42,6 @@ export class OnlineService {
     if (!userId) return [];
 
     const friendIds = await this.userService.getFriendIds(userId);
-    console.log('friendIds', friendIds);
 
     if (!friendIds || friendIds.length === 0) return [];
 
@@ -50,13 +49,10 @@ export class OnlineService {
     for (const friendId of friendIds) {
       const key = `${this.USER_ONLINE_PREFIX}${friendId}`;
       const result = await this.cacheManager.get<string>(key);
-      console.log(result);
       if (result) {
         onlineFriends.push({ id: friendId, socketId: result });
       }
     }
-
-    console.log('online friends', onlineFriends);
 
     return onlineFriends;
   }
