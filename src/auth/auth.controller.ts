@@ -83,6 +83,20 @@ export class AuthController {
     return res.json(user);
   }
 
+  @Post('forgot-password')
+  async forgotPassword(@Body() data: { email: string }) {
+    return this.authService.forgotPassword(data.email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Req() req: Request,
+    @Body() data: { newPassword: string },
+  ) {
+    const token = req.headers.authorization?.split(' ')[1];
+    return this.authService.resetPassword(token, data.newPassword);
+  }
+
   @Post('signup')
   async signup(@Body() data: RegisterDto) {
     return this.authService.signup(data);
