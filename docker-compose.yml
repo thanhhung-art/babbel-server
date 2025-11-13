@@ -1,24 +1,24 @@
 services:
-  server:
-    container_name: babbel-server
-    image: babbel-server:latest
-    environment:
-      - NODE_ENV=development
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - DATABASE_URL=postgres://root_user:root-password@postgres:5432/babbeldb
-    env_file:
-      - .env
-    ports:
-      - 3000:3000
-    volumes:
-      - ./:/usr/src/app
-      - /usr/src/app/node_modules
-      - /usr/src/app/dist
-    depends_on:
-      - redis
-      - postgres
-    command: pnpm start:dev
+  # server:
+  #   container_name: babbel-server
+  #   image: babbel-server:latest
+  #   environment:
+  #     - NODE_ENV=development
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #     - DATABASE_URL=postgres://root_user:root-password@postgres:5432/babbeldb
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - 3000:3000
+  #   volumes:
+  #     - ./:/usr/src/app
+  #     - /usr/src/app/node_modules
+  #     - /usr/src/app/dist
+  #   depends_on:
+  #     - redis
+  #     - postgres
+  #   command: pnpm start:dev
 
   redis:
     container_name: cache
